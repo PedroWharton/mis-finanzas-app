@@ -1,0 +1,284 @@
+@import "tailwindcss";
+
+/* =========================================================
+   Design tokens
+   (fuentes servidas vía next/font)
+   ========================================================= */
+:root {
+  color-scheme: light;
+
+  /* Navy ladder — la columna vertebral de la marca */
+  --navy-50: #f2f4f8;
+  --navy-100: #dde3ec;
+  --navy-200: #b7c2d4;
+  --navy-300: #8696b2;
+  --navy-400: #54688a;
+  --navy-500: #2e4467;
+  --navy-600: #1f3357;
+  --navy-700: #142547;
+  --navy-800: #0c1a36;
+  --navy-900: #060f25;
+
+  /* Paper neutrals (cálidos) */
+  --paper-50: #fbfaf7;
+  --paper-100: #f6f4ee;
+  --paper-200: #ece8dd;
+  --paper-300: #d8d2c2;
+  --paper-400: #a8a292;
+  --paper-500: #6e6a5e;
+  --paper-600: #45433b;
+  --paper-700: #2a2925;
+  --paper-800: #1a1916;
+  --paper-900: #0f0e0c;
+
+  /* Acentos */
+  --bordeaux-500: #a33b2a;
+  --bordeaux-700: #7a2419;
+  --gold-300: #d9b86a;
+  --gold-500: #a8842c;
+  --gold-700: #7a5e15;
+
+  /* Semánticos */
+  --success-700: #1f4a30;
+  --danger-700: #7a2419;
+
+  --bg-app: var(--paper-50);
+  --bg-surface: #ffffff;
+  --bg-sunken: var(--paper-100);
+  --bg-hero: var(--navy-900);
+
+  --fg-1: var(--paper-900);
+  --fg-2: var(--paper-600);
+  --fg-3: var(--paper-500);
+  --fg-on-hero: var(--paper-50);
+  --fg-hero-muted: var(--navy-300);
+  --fg-hero-soft: var(--navy-200);
+
+  --border-1: var(--paper-200);
+  --border-2: var(--paper-300);
+  --border-focus: var(--navy-700);
+
+  --good: var(--success-700);
+  --bad: var(--danger-700);
+
+  /* Verde/rojo con contraste AA sobre fondos navy (hero, masthead) */
+  --good-on-hero: #7fbf98;
+  --bad-on-hero: #e08a7a;
+
+  --radius-sm: 4px;
+
+  /* Serie categórica del mockup (plataformas / propósitos) */
+  --chart-1: var(--navy-700);
+  --chart-2: var(--gold-500);
+  --chart-3: var(--bordeaux-500);
+  --chart-4: var(--navy-400);
+  --chart-5: var(--paper-500);
+  --chart-efectivo: var(--navy-300);
+
+  --shadow-xs: 0 1px 0 rgba(20, 37, 71, 0.04), 0 1px 2px rgba(20, 37, 71, 0.04);
+  --shadow-sm: 0 1px 2px rgba(20, 37, 71, 0.06), 0 2px 6px rgba(20, 37, 71, 0.04);
+  --ring-focus: 0 0 0 3px rgba(20, 37, 71, 0.18);
+
+  --radius-xs: 2px;
+  --radius-md: 6px;
+  --radius-pill: 999px;
+
+  --ls-wide: 0.04em;
+  --ls-eyebrow: 0.12em;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-base: 200ms;
+}
+
+@theme inline {
+  --color-background: var(--bg-app);
+  --color-foreground: var(--fg-1);
+  --font-sans: var(--font-body);
+}
+
+
+body {
+  background: var(--bg-app);
+  color: var(--fg-1);
+  font-family: var(--font-body), "Inter Tight", -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.font-display {
+  font-family: var(--font-display), "Source Serif 4", Georgia, serif;
+  font-optical-sizing: auto;
+}
+
+.font-mono {
+  font-family: var(--font-mono-wb), "JetBrains Mono", monospace;
+}
+
+.etiqueta {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+/* Filete dorado doble — la firma tipográfica del sistema. */
+.filete-dorado {
+  height: 4px;
+  border-top: 2px solid var(--gold-500);
+  border-bottom: 1px solid var(--gold-300);
+}
+
+/* Grano de papel sutil sobre todo el fondo (solo pantalla). */
+@media screen {
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+  }
+}
+
+/* =========================================================
+   Paneles editoriales — en desktop las cajas se vuelven
+   secciones de broadsheet: regla superior tinta + numeración
+   de sección (Nº 01, Nº 02…) en el eyebrow.
+   ========================================================= */
+.contenido-editorial {
+  counter-reset: seccion;
+}
+.panel-wb {
+  counter-increment: seccion;
+}
+@media screen and (min-width: 768px) {
+  .panel-wb {
+    background: transparent;
+    border: 0;
+    border-top: 2px solid var(--navy-900);
+    border-radius: 0;
+    box-shadow: none;
+    padding: 24px 2px 10px;
+  }
+  .panel-wb > .panel-cabecera .etiqueta::before {
+    content: "Nº " counter(seccion, decimal-leading-zero) "  ·  ";
+    font-family: var(--font-mono-wb), "JetBrains Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--gold-700);
+  }
+}
+
+/* Fuerza el color exacto de fondos/decoraciones al imprimir. */
+.color-exacto {
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+::selection {
+  background: var(--navy-100);
+  color: var(--navy-900);
+}
+
+/* En @layer base para que las utilities (p.ej. text-[var(--paper-50)] en
+   botones-link) puedan pisarla; sin layer, esta regla les ganaba el cascade. */
+@layer base {
+  a {
+    color: var(--navy-700);
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+  a:hover {
+    color: var(--navy-500);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.revela {
+  animation: aparecer 0.5s var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .revela {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+a,
+button,
+summary,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* =========================================================
+   Impresión — reglas del documento de /reporte (A4).
+   Antes vivían en un <style jsx global> dentro de la página;
+   el proyecto no depende de styled-jsx.
+   ========================================================= */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 12mm 14mm;
+  }
+  html,
+  body {
+    background: #ffffff !important;
+  }
+  * {
+    box-shadow: none !important;
+  }
+  .evitar-corte {
+    break-inside: avoid;
+  }
+  section,
+  header,
+  footer {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  tr {
+    break-inside: avoid;
+  }
+  thead {
+    display: table-header-group;
+  }
+  /* La tabla de posiciones nunca se recorta al imprimir: sin scroll,
+     tipografía compacta y ancho fijo al de la hoja. */
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+  .tabla-posiciones {
+    min-width: 0 !important;
+    width: 100% !important;
+    font-size: 10px !important;
+    table-layout: auto;
+  }
+  .tabla-posiciones .font-mono {
+    font-size: 9px !important;
+  }
+  .tabla-posiciones td:first-child {
+    white-space: normal !important;
+  }
+}
