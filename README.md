@@ -173,4 +173,4 @@ cotizan cada 100 nominales). Agregá las tuyas ahí.
 
 ## Licencia
 
-Pendiente de definir.
+[MIT](LICENSE).
