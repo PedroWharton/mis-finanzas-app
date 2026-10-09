@@ -4,6 +4,8 @@ import { AppShell } from '@/app/componentes/AppShell'
 import { EstadoVacio } from '@/app/componentes/ui/EstadoVacio'
 import { SkeletonPagina } from '@/app/componentes/ui/Skeleton'
 import { claseBotonSecundario } from '@/app/componentes/ui/campos'
+import { Logo } from '@/app/componentes/ui/Logo'
+import { Subrayado } from '@/app/componentes/ui/Marcador'
 import { COLOR_TIPO, COLORES_PLATAFORMA } from '@/app/componentes/ui/colores'
 import {
   usd,
@@ -51,17 +53,17 @@ function FilaAsignacion({
   return (
     <li className="min-w-0">
       <div className="flex items-baseline justify-between gap-3 text-[13px]">
-        <span className="min-w-0 break-words font-semibold text-[var(--fg-1)]">
+        <span className="min-w-0 break-words font-medium text-[var(--fg-1)]">
           <span
             aria-hidden="true"
-            className="color-exacto mr-2 inline-block h-2 w-2 rounded-[var(--radius-xs)] align-middle"
+            className="color-exacto mr-2 inline-block h-2 w-2 rounded-full align-middle"
             style={{ background: color }}
           />
           {nombre}
         </span>
-        <span className="shrink-0 tabular-nums text-[var(--fg-2)]">
+        <span className="shrink-0 font-mono text-[12px] text-[var(--fg-2)]">
           {usd.format(valor)} ·{' '}
-          <span className="font-semibold text-[var(--fg-1)]">{pct.format(proporcion)}</span>
+          <span className="text-[var(--fg-1)]">{pct.format(proporcion)}</span>
         </span>
       </div>
       <div className="mt-1">
@@ -71,17 +73,29 @@ function FilaAsignacion({
   )
 }
 
-function Ganancia({ montoUSD, porcentaje }: { montoUSD: number; porcentaje: number }) {
+function Ganancia({
+  montoUSD,
+  porcentaje,
+  apilado = false,
+}: {
+  montoUSD: number
+  porcentaje: number
+  apilado?: boolean
+}) {
   return (
     <span
-      className="tabular-nums font-semibold whitespace-nowrap"
+      className={`font-mono ${apilado ? 'inline-flex flex-col items-end leading-tight' : 'whitespace-nowrap'}`}
       style={{ color: montoUSD >= 0 ? 'var(--good)' : 'var(--bad)' }}
     >
-      {signo(montoUSD)}
-      {usd.format(Math.abs(montoUSD))}
-      <span className="ml-1 text-[11px] font-normal">
-        ({signo(montoUSD)}
-        {pct.format(Math.abs(porcentaje))})
+      <span className="whitespace-nowrap">
+        {signo(montoUSD)}
+        {usd.format(Math.abs(montoUSD))}
+      </span>
+      <span className={`whitespace-nowrap text-[0.9em] font-normal ${apilado ? '' : 'ml-1'}`}>
+        {apilado ? '' : '('}
+        {signo(montoUSD)}
+        {pct.format(Math.abs(porcentaje))}
+        {apilado ? '' : ')'}
       </span>
     </span>
   )
@@ -164,345 +178,334 @@ export default function Reporte() {
   const totValor = filas.reduce((s, f) => s + f.valorUSD, 0)
   const totGanancia = filas.reduce((s, f) => s + f.gananciaUSD, 0)
 
+  const kpiNota = 'mt-2 text-[12px] leading-snug text-[var(--fg-3)]'
+  const kpiValor = 'font-display mt-2 text-[32px] font-medium leading-none tracking-[-0.02em] sm:text-[36px] print:text-[26px]'
+  const tituloSeccion = 'titulo-seccion print:text-[17px]'
+  const subtitulo = 'mb-3 text-[11px] font-semibold uppercase tracking-[var(--ls-eyebrow)] text-[var(--fg-3)]'
+  const th = 'py-2 pr-3 text-[10px] font-semibold uppercase tracking-[var(--ls-eyebrow)] text-[var(--fg-3)]'
+
   return (
     <AppShell
       titulo="Reporte"
-      dato={<p className="text-[13px] text-[var(--fg-hero-soft)]">Datos al {fechaDatos}</p>}
+      dato={<p className="text-[15px] text-[var(--fg-2)]">Datos al {fechaDatos}</p>}
     >
-      <div className="mx-auto flex max-w-[860px] flex-col gap-7 print:max-w-none print:gap-5">
+      <div className="mx-auto flex max-w-[940px] flex-col gap-5 print:max-w-none">
         {/* Barra de acciones (solo pantalla) */}
         <div className="flex flex-wrap items-center justify-end gap-3 print:hidden">
           <button type="button" onClick={() => window.print()} className={claseBotonSecundario}>
-            Imprimir / guardar PDF
+            Imprimir o guardar PDF
           </button>
           <a href="/api/csv" download className={claseBotonSecundario}>
             Descargar CSV
           </a>
         </div>
 
-        {/* Masthead navy — también se imprime */}
-        <header className="color-exacto overflow-hidden rounded-[var(--radius-md)] bg-[var(--bg-hero)] shadow-[var(--shadow-sm)] print:rounded-none print:shadow-none">
-          <div className="px-6 pb-6 pt-7 sm:px-9">
+        {/* La hoja: en escritorio se ve como un documento sobre la mesa; en
+            el celular y en papel, sin marco. */}
+        <article className="flex flex-col gap-10 md:rounded-[var(--radius-lg)] md:border md:border-[var(--border-1)] md:bg-[var(--bg-surface)] md:px-14 md:py-12 md:shadow-[var(--shadow-sm)] print:gap-7 print:border-0 print:p-0 print:shadow-none">
+          {/* Membrete */}
+          <header className="evitar-corte">
             <div className="flex items-baseline justify-between gap-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[var(--ls-eyebrow)] text-[var(--fg-hero-muted)]">
-                Mis Finanzas · Reporte de cartera
+              <p className="flex min-w-0 items-center gap-2.5 text-[13px] text-[var(--fg-2)]">
+                <Logo size={28} className="color-exacto" />
+                <span className="font-display text-[16px] font-medium text-[var(--fg-1)]">Mis Finanzas</span>
+                <span className="hidden sm:inline print:inline">
+                  <span className="mx-2 text-[var(--border-2)]" aria-hidden="true">|</span>
+                  Reporte de cartera
+                </span>
               </p>
-              <p className="shrink-0 text-[11px] uppercase tracking-[var(--ls-eyebrow)] text-[var(--fg-hero-muted)]">
-                {fechaLarga.format(hoy)}
-              </p>
+              <p className="shrink-0 font-mono text-[12px] text-[var(--fg-2)]">{fechaLarga.format(hoy)}</p>
             </div>
-            <h1 className="font-display mt-3 text-[28px] font-medium leading-tight tracking-[-0.01em] text-[var(--fg-on-hero)] sm:text-[32px]">
+            <div aria-hidden="true" className="filete-dorado color-exacto mt-3" />
+            <h2 className="font-display mt-8 text-[30px] font-medium leading-tight tracking-[-0.015em] text-[var(--fg-1)] sm:text-[38px] print:mt-6 print:text-[30px]">
               Estado de la cartera
-            </h1>
-            <p className="mt-1 text-[13px] text-[var(--fg-hero-soft)]">
-              Preparado para revisión con el asesor financiero · precios al {fechaDatos}
+            </h2>
+            <p className="mt-2 max-w-[60ch] text-[14px] text-[var(--fg-2)]">
+              Preparado para revisión con el asesor financiero. Precios al {fechaDatos}.
             </p>
-          </div>
-          {/* filete dorado */}
-          <div
-            aria-hidden="true"
-            className="color-exacto h-[3px] w-full"
-            style={{ background: 'var(--gold-500)' }}
-          />
-          <dl className="grid grid-cols-1 gap-x-8 gap-y-4 px-6 py-6 sm:grid-cols-3 sm:px-9">
-            <div>
-              <dt className="text-[11px] font-semibold uppercase tracking-[var(--ls-eyebrow)] text-[var(--fg-hero-muted)]">
-                Patrimonio total
-              </dt>
-              <dd className="font-display mt-1.5 text-4xl font-medium leading-none tabular-nums text-[var(--fg-on-hero)]">
-                {usdEntero.format(total)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[11px] font-semibold uppercase tracking-[var(--ls-eyebrow)] text-[var(--fg-hero-muted)]">
-                Rendimiento (M. Dietz{dietz ? ` desde ${fechaTabla.format(parseISO(dietz.desde))}` : ''})
-              </dt>
-              <dd
-                className="font-display mt-1.5 text-4xl font-medium leading-none tabular-nums"
-                style={{
-                  color:
-                    dietz && dietz.retorno < 0 ? 'var(--bad-on-hero)' : 'var(--good-on-hero)',
-                }}
-              >
-                {dietz ? `${signo(dietz.retorno)}${pct.format(Math.abs(dietz.retorno))}` : '—'}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[11px] font-semibold uppercase tracking-[var(--ls-eyebrow)] text-[var(--fg-hero-muted)]">
-                Renta generada {anioActual}
-              </dt>
-              <dd className="font-display mt-1.5 text-4xl font-medium leading-none tabular-nums text-[var(--fg-on-hero)]">
-                {usd.format(renta.total)}
-              </dd>
-            </div>
-          </dl>
-        </header>
 
-        {/* Asignación en dos columnas */}
-        <section aria-labelledby="asignacion" className="evitar-corte">
-          <h2 id="asignacion" className="etiqueta mb-4">
-            Asignación
-          </h2>
-          <div className="grid gap-7 sm:grid-cols-2">
-            <div>
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-[var(--ls-wide)] text-[var(--fg-2)]">
-                Por tipo de activo
-              </h3>
-              <ul className="flex flex-col gap-3">
-                {porTipoVal.map(([tipo, valor]) => (
-                  <FilaAsignacion
-                    key={tipo}
-                    nombre={NOMBRE_TIPO[tipo]}
-                    valor={valor}
-                    total={total}
-                    color={COLOR_TIPO[tipo]}
-                  />
-                ))}
-              </ul>
+            <dl className="mt-8 grid grid-cols-1 border-y border-[var(--border-2)] sm:grid-cols-3 print:mt-6 print:grid-cols-3">
+              <div className="py-5 sm:pr-6 print:py-4 print:pr-5">
+                <dt className="text-[11px] font-semibold uppercase tracking-[var(--ls-eyebrow)] text-[var(--fg-3)]">Patrimonio total</dt>
+                <dd className={`${kpiValor} text-[var(--fg-1)]`}>
+                  <Subrayado>{usdEntero.format(total)}</Subrayado>
+                </dd>
+              </div>
+              <div className="border-t border-[var(--border-1)] py-5 sm:border-l sm:border-t-0 sm:px-6 print:border-l print:border-t-0 print:px-5 print:py-4">
+                <dt className="text-[11px] font-semibold uppercase tracking-[var(--ls-eyebrow)] text-[var(--fg-3)]">Rendimiento</dt>
+                <dd
+                  className={kpiValor}
+                  style={{ color: !dietz ? 'var(--fg-3)' : dietz.retorno < 0 ? 'var(--bad)' : 'var(--good)' }}
+                >
+                  {dietz ? `${signo(dietz.retorno)}${pct.format(Math.abs(dietz.retorno))}` : '—'}
+                </dd>
+                <dd className={kpiNota}>
+                  {dietz
+                    ? `Modified Dietz desde el ${fechaTabla.format(parseISO(dietz.desde))}`
+                    : 'Sin registros diarios suficientes para calcularlo'}
+                </dd>
+              </div>
+              <div className="border-t border-[var(--border-1)] py-5 sm:border-l sm:border-t-0 sm:pl-6 print:border-l print:border-t-0 print:py-4 print:pl-5">
+                <dt className="text-[11px] font-semibold uppercase tracking-[var(--ls-eyebrow)] text-[var(--fg-3)]">Renta generada en {anioActual}</dt>
+                <dd className={`${kpiValor} text-[var(--fg-1)]`}>{usd.format(renta.total)}</dd>
+              </div>
+            </dl>
+          </header>
+
+          {/* Asignación en dos columnas */}
+          <section aria-labelledby="asignacion" className="evitar-corte">
+            <h2 id="asignacion" className={`${tituloSeccion} mb-5`}>
+              Asignación
+            </h2>
+            <div className="grid gap-8 sm:grid-cols-2 sm:gap-10 print:grid-cols-2 print:gap-8">
+              <div>
+                <h3 className={subtitulo}>Por tipo de activo</h3>
+                <ul className="flex flex-col gap-3">
+                  {porTipoVal.map(([tipo, valor]) => (
+                    <FilaAsignacion
+                      key={tipo}
+                      nombre={NOMBRE_TIPO[tipo]}
+                      valor={valor}
+                      total={total}
+                      color={COLOR_TIPO[tipo]}
+                    />
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className={subtitulo}>Por plataforma</h3>
+                <ul className="flex flex-col gap-3">
+                  {porPlataformaVal.map(([nombre, valor], i) => (
+                    <FilaAsignacion
+                      key={nombre}
+                      nombre={nombre}
+                      valor={valor}
+                      total={total}
+                      color={COLORES_PLATAFORMA[i % COLORES_PLATAFORMA.length]}
+                    />
+                  ))}
+                </ul>
+              </div>
             </div>
-            <div>
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-[var(--ls-wide)] text-[var(--fg-2)]">
-                Por plataforma
-              </h3>
-              <ul className="flex flex-col gap-3">
-                {porPlataformaVal.map(([nombre, valor], i) => (
-                  <FilaAsignacion
-                    key={nombre}
-                    nombre={nombre}
-                    valor={valor}
-                    total={total}
-                    color={COLORES_PLATAFORMA[i % COLORES_PLATAFORMA.length]}
-                  />
-                ))}
-              </ul>
-            </div>
-          </div>
-          <p className="mt-4 text-xs text-[var(--fg-3)] tabular-nums">
-            Exposición: {pct.format(total > 0 ? expo.variable / total : 0)} renta variable ·{' '}
-            {pct.format(total > 0 ? expo.fija / total : 0)} renta fija ·{' '}
-            {pct.format(total > 0 ? expo.liquido / total : 0)} líquido · 100% USD
-          </p>
-        </section>
+            <p className="mt-5 text-[13px] text-[var(--fg-2)]">
+              Exposición: {pct.format(total > 0 ? expo.variable / total : 0)} renta variable,{' '}
+              {pct.format(total > 0 ? expo.fija / total : 0)} renta fija y{' '}
+              {pct.format(total > 0 ? expo.liquido / total : 0)} líquido. Todo en USD.
+            </p>
+          </section>
 
-        <hr className="border-0 border-t border-[var(--border-2)]" />
+          {/* Posiciones */}
+          <section aria-labelledby="posiciones">
+            <h2 id="posiciones" className={`${tituloSeccion} mb-4`}>
+              Detalle de posiciones
+            </h2>
 
-        {/* Posiciones */}
-        <section aria-labelledby="posiciones">
-          <h2 id="posiciones" className="etiqueta mb-4">
-            Detalle de posiciones
-          </h2>
-
-          {filas.length === 0 ? (
-            <EstadoVacio
-              titulo="Sin posiciones para mostrar"
-              detalle="Cuando cargues operaciones, el detalle va a aparecer acá."
-            />
-          ) : (
-            <>
-              {/* Variante cards (< md, solo pantalla) */}
-              <ul className="flex flex-col gap-3 md:hidden print:hidden">
-                {filas.map((f, i) => (
-                  <li
-                    key={i}
-                    className="rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--bg-surface)] px-4 py-3 shadow-[var(--shadow-xs)]"
-                  >
-                    <div className="flex items-baseline justify-between gap-3">
-                      <p className="min-w-0 break-words font-semibold text-[var(--fg-1)]">
-                        {f.nombre}
-                        {f.ticker && (
-                          <span
-                            translate="no"
-                            className="font-mono ml-1.5 text-[11px] font-normal text-[var(--fg-3)]"
-                          >
-                            {f.ticker}
-                          </span>
-                        )}
-                      </p>
-                      <p className="shrink-0 text-[13px] text-[var(--fg-3)]">{f.plataforma}</p>
-                    </div>
-                    <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[13px]">
-                      <div className="flex justify-between gap-2">
-                        <dt className="text-[var(--fg-3)]">Fecha</dt>
-                        <dd className="tabular-nums text-[var(--fg-2)]">
-                          {fechaTabla.format(parseISO(f.fecha))}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between gap-2">
-                        <dt className="text-[var(--fg-3)]">Cantidad</dt>
-                        <dd className="tabular-nums text-[var(--fg-2)]">
-                          {f.cantidad.toLocaleString('es-AR', { maximumFractionDigits: 4 })}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between gap-2">
-                        <dt className="text-[var(--fg-3)]">Invertido</dt>
-                        <dd className="tabular-nums text-[var(--fg-2)]">{usd.format(f.costoUSD)}</dd>
-                      </div>
-                      <div className="flex justify-between gap-2">
-                        <dt className="text-[var(--fg-3)]">P. compra</dt>
-                        <dd className="tabular-nums text-[var(--fg-2)]">
-                          {usd.format(f.precioCompra)}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between gap-2">
-                        <dt className="text-[var(--fg-3)]">P. actual</dt>
-                        <dd className="tabular-nums text-[var(--fg-2)]">
-                          {f.precioActual !== null ? usd.format(f.precioActual) : '—'}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between gap-2">
-                        <dt className="text-[var(--fg-3)]">Valor</dt>
-                        <dd className="tabular-nums font-semibold text-[var(--fg-1)]">
-                          {usd.format(f.valorUSD)}
-                        </dd>
-                      </div>
-                    </dl>
-                    <p className="mt-2 border-t border-[var(--border-1)] pt-2 text-right text-[13px]">
-                      <Ganancia montoUSD={f.gananciaUSD} porcentaje={f.gananciaPct / 100} />
-                    </p>
-                  </li>
-                ))}
-              </ul>
-
-              {/* Tabla (≥ md en pantalla; siempre en print) */}
-              <div className="hidden overflow-x-auto md:block print:block print:overflow-visible">
-                <table className="tabla-posiciones w-full min-w-[680px] border-collapse text-[12px] print:min-w-0">
-                  <thead>
-                    <tr className="border-b-2 border-[var(--navy-700)] text-left text-[11px] font-semibold uppercase tracking-[var(--ls-wide)] text-[var(--fg-3)]">
-                      <th scope="col" className="py-2 pr-3">Activo</th>
-                      <th scope="col" className="py-2 pr-3">Plataforma</th>
-                      <th scope="col" className="py-2 pr-3 text-right">Fecha</th>
-                      <th scope="col" className="py-2 pr-3 text-right">Cantidad</th>
-                      <th scope="col" className="py-2 pr-3 text-right">Invertido</th>
-                      <th scope="col" className="py-2 pr-3 text-right">P. compra</th>
-                      <th scope="col" className="py-2 pr-3 text-right">P. actual</th>
-                      <th scope="col" className="py-2 pr-3 text-right">Valor</th>
-                      <th scope="col" className="py-2 text-right">Ganancia</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filas.map((f, i) => (
-                      <tr
-                        key={i}
-                        className="color-exacto border-b border-[var(--border-1)] odd:bg-transparent even:bg-[var(--bg-sunken)]"
-                      >
-                        <td className="py-[7px] pl-1 pr-3 font-semibold text-[var(--fg-1)] whitespace-nowrap">
+            {filas.length === 0 ? (
+              <EstadoVacio
+                titulo="Sin posiciones para mostrar"
+                detalle="Cuando cargues operaciones en Movimientos, el detalle va a aparecer acá."
+              />
+            ) : (
+              <>
+                {/* Variante lista (< md, solo pantalla) */}
+                <ul className="flex flex-col border-y border-[var(--border-2)] md:hidden print:hidden">
+                  {filas.map((f, i) => (
+                    <li key={i} className="border-b border-[var(--border-1)] py-3.5 last:border-b-0">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p className="min-w-0 break-words font-medium text-[var(--fg-1)]">
                           {f.nombre}
                           {f.ticker && (
-                            <span
-                              translate="no"
-                              className="font-mono ml-1 text-[11px] font-normal text-[var(--fg-3)]"
-                            >
+                            <span translate="no" className="font-mono ml-1.5 text-[11px] font-normal text-[var(--fg-3)]">
                               {f.ticker}
                             </span>
                           )}
-                        </td>
-                        <td className="py-[7px] pr-3 text-[var(--fg-2)] whitespace-nowrap">
-                          {f.plataforma}
-                        </td>
-                        <td className="py-[7px] pr-3 text-right tabular-nums text-[var(--fg-2)] whitespace-nowrap">
-                          {fechaTabla.format(parseISO(f.fecha))}
-                        </td>
-                        <td className="py-[7px] pr-3 text-right tabular-nums text-[var(--fg-2)]">
-                          {f.cantidad.toLocaleString('es-AR', { maximumFractionDigits: 4 })}
-                        </td>
-                        <td className="py-[7px] pr-3 text-right tabular-nums text-[var(--fg-2)]">
-                          {usd.format(f.costoUSD)}
-                        </td>
-                        <td className="py-[7px] pr-3 text-right tabular-nums text-[var(--fg-2)]">
-                          {usd.format(f.precioCompra)}
-                        </td>
-                        <td className="py-[7px] pr-3 text-right tabular-nums text-[var(--fg-2)]">
-                          {f.precioActual !== null ? usd.format(f.precioActual) : '—'}
-                        </td>
-                        <td className="py-[7px] pr-3 text-right tabular-nums font-semibold text-[var(--fg-1)]">
-                          {usd.format(f.valorUSD)}
-                        </td>
-                        <td className="py-[7px] pr-1 text-right text-[12px]">
-                          <Ganancia montoUSD={f.gananciaUSD} porcentaje={f.gananciaPct / 100} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                        </p>
+                        <p className="shrink-0 font-mono text-[14px] text-[var(--fg-1)]">{usd.format(f.valorUSD)}</p>
+                      </div>
+                      <div className="mt-0.5 flex items-baseline justify-between gap-3 text-[13px]">
+                        <p className="text-[var(--fg-3)]">
+                          {f.plataforma} · desde {fechaTabla.format(parseISO(f.fecha))}
+                        </p>
+                        <Ganancia montoUSD={f.gananciaUSD} porcentaje={f.gananciaPct / 100} />
+                      </div>
+                      <dl className="mt-2 grid grid-cols-2 gap-x-5 gap-y-1 text-[13px]">
+                        <div className="flex justify-between gap-2">
+                          <dt className="text-[var(--fg-3)]">Invertido</dt>
+                          <dd className="font-mono text-[12px] text-[var(--fg-2)]">{usd.format(f.costoUSD)}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2">
+                          <dt className="text-[var(--fg-3)]">Cantidad</dt>
+                          <dd className="font-mono text-[12px] text-[var(--fg-2)]">
+                            {f.cantidad.toLocaleString('es-AR', { maximumFractionDigits: 4 })}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between gap-2">
+                          <dt className="text-[var(--fg-3)]">P. compra</dt>
+                          <dd className="font-mono text-[12px] text-[var(--fg-2)]">{usd.format(f.precioCompra)}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2">
+                          <dt className="text-[var(--fg-3)]">P. actual</dt>
+                          <dd className="font-mono text-[12px] text-[var(--fg-2)]">
+                            {f.precioActual !== null ? usd.format(f.precioActual) : '—'}
+                          </dd>
+                        </div>
+                      </dl>
+                    </li>
+                  ))}
                   {totValor > 0 && (
-                    <tfoot>
-                      <tr className="border-t-2 border-[var(--navy-700)] text-[13px] font-semibold text-[var(--fg-1)]">
-                        <td className="py-2.5 pl-1 pr-3" colSpan={4}>
-                          Total posiciones
-                        </td>
-                        <td className="py-2.5 pr-3 text-right tabular-nums">
-                          {usd.format(totInvertido)}
-                        </td>
-                        <td className="py-2.5 pr-3" colSpan={2} />
-                        <td className="py-2.5 pr-3 text-right tabular-nums">
-                          {usd.format(totValor)}
-                        </td>
-                        <td className="py-2.5 pr-1 text-right text-[13px]">
+                    <li className="flex items-baseline justify-between gap-3 border-t-2 border-[var(--rule-strong)] py-3 font-semibold text-[var(--fg-1)]">
+                      <span>Total posiciones</span>
+                      <span className="text-right">
+                        <span className="block font-mono">{usd.format(totValor)}</span>
+                        <span className="text-[13px]">
                           <Ganancia
                             montoUSD={totGanancia}
                             porcentaje={totInvertido > 0 ? totGanancia / totInvertido : 0}
                           />
-                        </td>
-                      </tr>
-                    </tfoot>
+                        </span>
+                      </span>
+                    </li>
                   )}
-                </table>
-              </div>
-            </>
-          )}
-          <p className="mt-2 text-xs text-[var(--fg-3)]">
-            El efectivo por plataforma no figura en el detalle; está incluido en la asignación y el
-            patrimonio total.
-          </p>
-        </section>
+                </ul>
 
-        <hr className="border-0 border-t border-[var(--border-2)]" />
-
-        {/* Renta generada */}
-        <section aria-labelledby="renta" className="evitar-corte">
-          <h2 id="renta" className="etiqueta mb-4">
-            Renta generada en {anioActual}
-          </h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 print:grid-cols-5 lg:grid-cols-5">
-            {[
-              { nombre: 'Interés del bono devengado', valor: renta.bonoDevengado },
-              { nombre: 'Intereses cobrados', valor: renta.intereses },
-              { nombre: 'Dividendos', valor: renta.dividendos },
-              { nombre: 'Rendimientos cripto', valor: renta.rendimientos },
-              { nombre: 'Resultado por ventas', valor: renta.ventas },
-            ].map((r) => (
-              <div
-                key={r.nombre}
-                className="rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--bg-surface)] px-4 py-3 print:bg-white"
-              >
-                <p className="text-[11px] font-semibold uppercase tracking-[var(--ls-wide)] text-[var(--fg-3)]">
-                  {r.nombre}
-                </p>
-                <p className="font-display mt-1.5 text-xl font-medium tabular-nums text-[var(--fg-1)]">
-                  {usd.format(r.valor)}
-                </p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-3 text-sm text-[var(--fg-2)]">
-            Total del año:{' '}
-            <span className="font-display text-lg font-semibold tabular-nums text-[var(--fg-1)]">
-              {usd.format(renta.total)}
-            </span>
-          </p>
-        </section>
-
-        <footer className="evitar-corte border-t border-[var(--border-2)] pt-4 text-[11px] leading-relaxed text-[var(--fg-3)]">
-          <div className="flex items-baseline justify-between gap-4">
-            <p>
-              Generado por <span className="font-semibold text-[var(--fg-2)]">Mis Finanzas</span> ·
-              datos al {fechaDatos}. Rendimiento calculado con Modified Dietz (aproximación de TWR)
-              sobre el histórico de registros diarios.
+                {/* Tabla (≥ md en pantalla; siempre en print) */}
+                <div className="hidden md:block print:block">
+                  <table className="tabla-posiciones w-full border-collapse text-[13px]">
+                    <thead>
+                      <tr className="border-b-2 border-[var(--rule-strong)] text-left">
+                        <th scope="col" className={th}>Activo</th>
+                        <th scope="col" className={th}>Plataforma</th>
+                        <th scope="col" className={`${th} text-right`}>Fecha</th>
+                        <th scope="col" className={`${th} text-right`}>Cantidad</th>
+                        <th scope="col" className={`${th} text-right`}>Invertido</th>
+                        <th scope="col" className={`${th} text-right`}>P. compra</th>
+                        <th scope="col" className={`${th} text-right`}>P. actual</th>
+                        <th scope="col" className={`${th} text-right`}>Valor</th>
+                        <th scope="col" className={`${th} pr-0 text-right`}>Ganancia</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filas.map((f, i) => (
+                        <tr key={i} className="border-b border-[var(--border-1)] align-top">
+                          <th scope="row" className="py-2 pr-3 text-left font-medium text-[var(--fg-1)]">
+                            {f.nombre}
+                            {f.ticker && (
+                              <span translate="no" className="font-mono block text-[11px] font-normal text-[var(--fg-3)]">
+                                {f.ticker}
+                              </span>
+                            )}
+                          </th>
+                          <td className="py-2 pr-3 text-[var(--fg-2)] whitespace-nowrap">{f.plataforma}</td>
+                          <td className="py-2 pr-3 text-right font-mono text-[12px] text-[var(--fg-2)] whitespace-nowrap">
+                            {fechaTabla.format(parseISO(f.fecha))}
+                          </td>
+                          <td className="py-2 pr-3 text-right font-mono text-[12px] text-[var(--fg-2)]">
+                            {f.cantidad.toLocaleString('es-AR', { maximumFractionDigits: 4 })}
+                          </td>
+                          <td className="py-2 pr-3 text-right font-mono text-[12px] text-[var(--fg-2)] whitespace-nowrap">
+                            {usd.format(f.costoUSD)}
+                          </td>
+                          <td className="py-2 pr-3 text-right font-mono text-[12px] text-[var(--fg-2)] whitespace-nowrap">
+                            {usd.format(f.precioCompra)}
+                          </td>
+                          <td className="py-2 pr-3 text-right font-mono text-[12px] text-[var(--fg-2)] whitespace-nowrap">
+                            {f.precioActual !== null ? usd.format(f.precioActual) : '—'}
+                          </td>
+                          <td className="py-2 pr-3 text-right font-mono text-[13px] text-[var(--fg-1)] whitespace-nowrap">
+                            {usd.format(f.valorUSD)}
+                          </td>
+                          <td className="py-2 pr-0 text-right">
+                            <Ganancia apilado montoUSD={f.gananciaUSD} porcentaje={f.gananciaPct / 100} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    {totValor > 0 && (
+                      // En papel, el total va una sola vez al final (no se repite por hoja).
+                      <tfoot className="print:[display:table-row-group]">
+                        <tr className="border-t-2 border-[var(--rule-strong)] align-top font-semibold text-[var(--fg-1)]">
+                          <th scope="row" className="py-2.5 pr-3 text-left" colSpan={4}>
+                            Total posiciones
+                          </th>
+                          <td className="py-2.5 pr-3 text-right font-mono whitespace-nowrap">
+                            {usd.format(totInvertido)}
+                          </td>
+                          <td className="py-2.5 pr-3" colSpan={2} />
+                          <td className="py-2.5 pr-3 text-right font-mono whitespace-nowrap">
+                            {usd.format(totValor)}
+                          </td>
+                          <td className="py-2.5 pr-0 text-right">
+                            <Ganancia
+                              apilado
+                              montoUSD={totGanancia}
+                              porcentaje={totInvertido > 0 ? totGanancia / totInvertido : 0}
+                            />
+                          </td>
+                        </tr>
+                      </tfoot>
+                    )}
+                  </table>
+                </div>
+              </>
+            )}
+            <p className="mt-3 text-[12px] text-[var(--fg-3)]">
+              El efectivo por plataforma no figura en el detalle; está incluido en la asignación y el
+              patrimonio total.
             </p>
-            <p aria-hidden="true" className="shrink-0 font-display italic text-[var(--fg-3)]">
-              — PW
-            </p>
-          </div>
-        </footer>
+          </section>
+
+          {/* Renta generada: estado de cuenta, no tarjetas */}
+          <section aria-labelledby="renta" className="evitar-corte">
+            <h2 id="renta" className={`${tituloSeccion} mb-4`}>
+              Renta generada en {anioActual}
+            </h2>
+            <table className="w-full max-w-[460px] border-collapse text-[14px] print:text-[12px]">
+              <tbody>
+                {[
+                  { nombre: 'Interés del bono devengado', valor: renta.bonoDevengado },
+                  { nombre: 'Intereses cobrados', valor: renta.intereses },
+                  { nombre: 'Dividendos', valor: renta.dividendos },
+                  { nombre: 'Rendimientos cripto', valor: renta.rendimientos },
+                  { nombre: 'Resultado por ventas', valor: renta.ventas },
+                ].map((r) => (
+                  <tr key={r.nombre} className="border-b border-[var(--border-1)]">
+                    <th scope="row" className="py-2 pr-4 text-left font-normal text-[var(--fg-2)]">
+                      {r.nombre}
+                    </th>
+                    <td
+                      className={`py-2 text-right font-mono text-[13px] ${r.valor === 0 ? 'text-[var(--fg-3)]' : 'text-[var(--fg-1)]'}`}
+                    >
+                      {usd.format(r.valor)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-[var(--rule-strong)]">
+                  <th scope="row" className="py-2.5 pr-4 text-left font-semibold text-[var(--fg-1)]">
+                    Total del año
+                  </th>
+                  <td className="font-display py-2.5 text-right text-[20px] font-medium text-[var(--fg-1)] print:text-[15px]">
+                    {usd.format(renta.total)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </section>
+
+          <footer className="evitar-corte border-t border-[var(--border-2)] pt-4 text-[12px] leading-relaxed text-[var(--fg-3)] print:text-[10px]">
+            <div className="flex items-baseline justify-between gap-4">
+              <p className="max-w-[80ch]">
+                Generado por <span className="font-semibold text-[var(--fg-2)]">Mis Finanzas</span> con
+                datos al {fechaDatos}. Rendimiento calculado con Modified Dietz (aproximación de TWR)
+                sobre el histórico de registros diarios.
+              </p>
+              <p aria-hidden="true" className="shrink-0 font-display italic text-[var(--fg-3)]">
+                — PW
+              </p>
+            </div>
+          </footer>
+        </article>
       </div>
     </AppShell>
   )

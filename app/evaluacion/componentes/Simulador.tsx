@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { simularCompra, parsearMonto, type ResultadoSimulacion } from '@/lib/simulador'
 import type { Serie } from '@/lib/historicos'
 import type { TipoActivo } from '@/lib/tipos'
-import { pct } from '@/app/componentes/ui/formatters'
+import { pct, ratio } from '@/app/componentes/ui/formatters'
 import { claseBotonSecundario, claseInput } from '@/app/componentes/ui/campos'
 
 export interface SimuladorProps {
@@ -43,7 +43,7 @@ export function Simulador({ ticker, serie, tipo, valores, series, tipos }: Simul
         <button
           type="button"
           onClick={() => setAbierto(true)}
-          className="-m-2 inline-flex min-h-11 items-center rounded-[var(--radius-md)] p-2 text-xs font-semibold text-[var(--fg-2)] underline underline-offset-2 transition-colors duration-[var(--dur-base)] hover:text-[var(--fg-1)] focus-visible:outline-none focus-visible:[box-shadow:var(--ring-focus)]"
+          className="-m-2 inline-flex min-h-11 items-center rounded-[var(--radius-md)] p-2 text-xs font-semibold text-[var(--fg-2)] underline decoration-[var(--mark)] underline-offset-4 transition-colors duration-[var(--dur-base)] hover:text-[var(--fg-1)] focus-visible:outline-none focus-visible:[box-shadow:var(--ring-focus)]"
         >
           Simular compra
         </button>
@@ -59,7 +59,7 @@ export function Simulador({ ticker, serie, tipo, valores, series, tipos }: Simul
             enterKeyHint="go"
             value={monto}
             onChange={(e) => setMonto(e.target.value)}
-            className={`${claseInput} w-28 tabular-nums`}
+            className={`${claseInput} w-28 font-mono`}
           />
           <button type="submit" className={claseBotonSecundario}>
             Simular
@@ -75,18 +75,18 @@ export function Simulador({ ticker, serie, tipo, valores, series, tipos }: Simul
         <dl className="mt-2 grid grid-cols-1 gap-x-3 gap-y-1.5 text-xs md:grid-cols-2">
           <div className="flex justify-between gap-2">
             <dt className="text-[var(--fg-3)]">Peso resultante</dt>
-            <dd className="tabular-nums font-semibold text-[var(--fg-1)]">{pct.format(estado.r.pesoNuevo)}</dd>
+            <dd className="font-mono text-[var(--fg-1)]">{pct.format(estado.r.pesoNuevo)}</dd>
           </div>
           <div className="flex justify-between gap-2">
             <dt className="text-[var(--fg-3)]">Correlación media</dt>
-            <dd className="tabular-nums font-semibold text-[var(--fg-1)]">
-              {estado.r.correlacionMedia !== null ? estado.r.correlacionMedia.toFixed(2) : '—'}
+            <dd className="font-mono text-[var(--fg-1)]">
+              {estado.r.correlacionMedia !== null ? ratio.format(estado.r.correlacionMedia) : '—'}
             </dd>
           </div>
           <div className="flex justify-between gap-2 md:col-span-2">
             <dt className="text-[var(--fg-3)]">Vol. de cartera</dt>
             <dd
-              className="tabular-nums font-semibold"
+              className="font-mono"
               style={{ color: estado.r.volDespues > estado.r.volAntes ? 'var(--bad)' : 'var(--good)' }}
             >
               {pct.format(estado.r.volAntes)} → {pct.format(estado.r.volDespues)}{' '}

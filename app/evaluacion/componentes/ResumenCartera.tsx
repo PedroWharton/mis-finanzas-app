@@ -11,10 +11,12 @@ import {
 } from 'recharts'
 import type { PuntoBanda } from '@/lib/proyeccion'
 import { Panel } from '@/app/componentes/ui/Panel'
-import { pct, usd, usdEntero } from '@/app/componentes/ui/formatters'
+import { pct, ratio, usd } from '@/app/componentes/ui/formatters'
+import { grilla, miles, tickCifra, tickEje, tooltipCaja, tooltipCursor, tooltipRotulo } from '@/app/componentes/ui/graficos'
+
+// El valor total ya está en el masthead: acá van solo las métricas de riesgo.
 
 export interface ResumenCarteraProps {
-  valorTotal: number
   volCartera: number
   sharpeCartera: number
   drawdownCartera: number
@@ -24,11 +26,9 @@ export interface ResumenCarteraProps {
 function Kpi({ label, valor, color }: { label: string; valor: string; color?: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-[11px] font-semibold uppercase tracking-[var(--ls-wide)] text-[var(--fg-3)]">
-        {label}
-      </p>
+      <p className="text-[11px] font-semibold uppercase tracking-[var(--ls-eyebrow)] text-[var(--fg-3)]">{label}</p>
       <p
-        className="font-display mt-1.5 text-[26px] font-medium leading-none tabular-nums text-[var(--fg-1)] sm:text-[28px]"
+        className="font-display mt-2 text-[26px] font-medium leading-none tracking-[-0.015em] text-[var(--fg-1)] sm:text-[30px]"
         style={color ? { color } : undefined}
       >
         {valor}
@@ -37,21 +37,23 @@ function Kpi({ label, valor, color }: { label: string; valor: string; color?: st
   )
 }
 
-export function ResumenCartera({ valorTotal, volCartera, sharpeCartera, drawdownCartera, proyeccionCartera }: ResumenCarteraProps) {
+export function ResumenCartera({ volCartera, sharpeCartera, drawdownCartera, proyeccionCartera }: ResumenCarteraProps) {
   return (
-    <Panel titulo="Resumen de cartera" className="revela">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-5 max-[480px]:grid-cols-1 sm:grid-cols-4">
-        <Kpi label="Valor total" valor={usdEntero.format(valorTotal)} />
+    <Panel
+      titulo="Resumen de cartera"
+      ayuda="Proyección Monte Carlo a 6 meses (126 días hábiles): la línea es la mediana; la banda, el rango p10–p90."
+    >
+      <div className="grid grid-cols-3 gap-x-4 gap-y-5 sm:max-w-[640px]">
         <Kpi label="Volatilidad anual" valor={pct.format(volCartera)} />
         <Kpi
           label="Max drawdown"
           valor={`−${pct.format(Math.abs(drawdownCartera))}`}
           color="var(--bad)"
         />
-        <Kpi label="Sharpe" valor={sharpeCartera.toFixed(2)} />
+        <Kpi label="Sharpe" valor={ratio.format(sharpeCartera)} />
       </div>
       <div
-        className="mt-6 h-72"
+        className="mt-6 h-64"
         role="img"
         aria-label="Proyección Monte Carlo del valor de la cartera a 6 meses: banda p10–p90 y mediana, en USD"
       >
@@ -62,39 +64,36 @@ export function ResumenCartera({ valorTotal, volCartera, sharpeCartera, drawdown
               banda: [pt.p10, pt.p90],
               p50: pt.p50,
             }))}
-            margin={{ top: 8, right: 8, left: 8, bottom: 0 }}
+            margin={{ top: 8, right: 0, left: 4, bottom: 14 }}
           >
-            <CartesianGrid stroke="var(--border-1)" vertical={false} />
+            <CartesianGrid {...grilla} />
             <XAxis
               dataKey="dia"
-              stroke="var(--border-2)"
-              tick={{ fill: 'var(--fg-3)', fontSize: 11, fontFamily: 'var(--font-mono-wb)' }}
+              axisLine={false}
+              tick={tickEje}
               tickLine={false}
-              label={{ value: 'Días hábiles', position: 'insideBottom', offset: -2, fill: 'var(--fg-3)', fontSize: 11 }}
+              label={{ value: 'Días hábiles desde hoy', position: 'insideBottom', offset: -10, fill: 'var(--fg-3)', fontSize: 11 }}
             />
             <YAxis
-              stroke="var(--border-2)"
-              tick={{ fill: 'var(--fg-3)', fontSize: 11, fontFamily: 'var(--font-mono-wb)' }}
+              orientation="right"
+              axisLine={false}
+              tick={tickCifra}
               tickLine={false}
-              tickFormatter={(v: number) => usdEntero.format(v)}
-              width={72}
+              tickFormatter={miles}
+              width={44}
               domain={['auto', 'auto']}
             />
             <Tooltip
+              labelFormatter={(d) => `Día hábil ${d}`}
               formatter={(value, name) => {
                 if (name === 'banda' && Array.isArray(value)) {
                   return [`${usd.format(Number(value[0]))} – ${usd.format(Number(value[1]))}`, 'p10 – p90']
                 }
                 return [usd.format(Number(value)), 'Mediana']
               }}
-              contentStyle={{
-                background: 'var(--bg-surface)',
-                border: '1px solid var(--border-1)',
-                borderRadius: 6,
-                color: 'var(--fg-1)',
-                fontSize: 12,
-                boxShadow: 'var(--shadow-sm)',
-              }}
+              contentStyle={tooltipCaja}
+              labelStyle={tooltipRotulo}
+              cursor={tooltipCursor}
             />
             <Area
               type="monotone"
@@ -102,7 +101,7 @@ export function ResumenCartera({ valorTotal, volCartera, sharpeCartera, drawdown
               name="banda"
               stroke="none"
               fill="var(--chart-1)"
-              fillOpacity={0.14}
+              fillOpacity={0.12}
             />
             <Line
               type="monotone"
@@ -115,9 +114,6 @@ export function ResumenCartera({ valorTotal, volCartera, sharpeCartera, drawdown
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <p className="mt-[14px] text-xs text-[var(--fg-3)]">
-        Proyección Monte Carlo a 6 meses (126 días hábiles): banda p10–p90 y mediana.
-      </p>
     </Panel>
   )
 }

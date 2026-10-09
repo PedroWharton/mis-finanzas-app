@@ -1,13 +1,16 @@
 @import "tailwindcss";
 
 /* =========================================================
-   Design tokens
-   (fuentes servidas vía next/font)
+   Cuaderno — tokens
+   Papel cálido de fondo, navy como tinta, dorado como único
+   marcador. La escalera de color (navy / paper / gold /
+   bordeaux) es la fuente; los componentes usan solo los roles
+   semánticos de más abajo, que el modo oscuro remapea.
    ========================================================= */
 :root {
   color-scheme: light;
 
-  /* Navy ladder — la columna vertebral de la marca */
+  /* ---------- Escalera de marca ---------- */
   --navy-50: #f2f4f8;
   --navy-100: #dde3ec;
   --navy-200: #b7c2d4;
@@ -19,7 +22,6 @@
   --navy-800: #0c1a36;
   --navy-900: #060f25;
 
-  /* Paper neutrals (cálidos) */
   --paper-50: #fbfaf7;
   --paper-100: #f6f4ee;
   --paper-200: #ece8dd;
@@ -31,63 +33,184 @@
   --paper-800: #1a1916;
   --paper-900: #0f0e0c;
 
-  /* Acentos */
-  --bordeaux-500: #a33b2a;
-  --bordeaux-700: #7a2419;
   --gold-300: #d9b86a;
   --gold-500: #a8842c;
   --gold-700: #7a5e15;
-
-  /* Semánticos */
+  --bordeaux-500: #a33b2a;
+  --bordeaux-700: #7a2419;
   --success-700: #1f4a30;
-  --danger-700: #7a2419;
 
+  /* ---------- Superficies: papel ---------- */
   --bg-app: var(--paper-50);
-  --bg-surface: #ffffff;
+  --bg-surface: #fffefb;
   --bg-sunken: var(--paper-100);
-  --bg-hero: var(--navy-900);
+  --bg-hero: transparent; /* el encabezado ya no es una franja: es la hoja */
 
-  --fg-1: var(--paper-900);
-  --fg-2: var(--paper-600);
-  --fg-3: var(--paper-500);
-  --fg-on-hero: var(--paper-50);
-  --fg-hero-muted: var(--navy-300);
-  --fg-hero-soft: var(--navy-200);
+  /* ---------- Tinta: navy ---------- */
+  --fg-1: var(--navy-900); /* títulos, cifras */
+  --fg-body: var(--navy-800); /* texto corrido */
+  --fg-2: #3f4a62; /* 8,5:1 sobre papel */
+  --fg-3: #5e6880; /* 5,3:1 sobre papel: el mínimo para texto */
+  --fg-on-hero: var(--fg-1);
+  --fg-hero-soft: var(--fg-2);
+  --fg-hero-muted: var(--fg-3);
 
-  --border-1: var(--paper-200);
+  --border-1: var(--paper-200); /* filetes de 1 px */
   --border-2: var(--paper-300);
+  --border-ink: var(--navy-800); /* borde fuerte: pills, botones */
   --border-focus: var(--navy-700);
+  --border-hero: var(--border-1);
+  --rule-strong: var(--navy-900);
 
+  /* ---------- Marcador: dorado, único acento ---------- */
+  --mark: var(--gold-500); /* trazos, subrayados, líneas de gráfico */
+  --mark-fill: var(--gold-300); /* resaltador detrás de texto navy */
+  --mark-text: var(--gold-700); /* dorado como texto (5,9:1) */
+  --text-gold: var(--mark-text);
+
+  /* ---------- Ganancia / pérdida (AA, con signo siempre) ---------- */
   --good: var(--success-700);
-  --bad: var(--danger-700);
+  --bad: var(--bordeaux-700);
 
-  /* Verde/rojo con contraste AA sobre fondos navy (hero, masthead) */
-  --good-on-hero: #7fbf98;
-  --bad-on-hero: #e08a7a;
+  /* ---------- La franja: único bloque oscuro ---------- */
+  --band: var(--navy-900);
+  --band-ink: var(--paper-50);
+  --band-ink-3: var(--navy-300);
+  --band-rule: #1b2a48;
+  --band-edge: transparent;
+  --band-good: #7fbf98;
+  --band-bad: #e08a7a;
+  --good-on-hero: var(--good);
+  --bad-on-hero: var(--bad);
 
-  --radius-sm: 4px;
+  /* ---------- Acciones ---------- */
+  --accent: var(--navy-900);
+  --accent-hover: var(--navy-700);
+  --on-accent: var(--paper-50);
+  --link: var(--navy-800);
+  --link-hover: var(--navy-500);
+  --tone-navy: var(--navy-500);
+  --logo-ring: transparent;
 
-  /* Serie categórica del mockup (plataformas / propósitos) */
-  --chart-1: var(--navy-700);
-  --chart-2: var(--gold-500);
-  --chart-3: var(--bordeaux-500);
-  --chart-4: var(--navy-400);
-  --chart-5: var(--paper-500);
-  --chart-efectivo: var(--navy-300);
+  /* ---------- Series de gráficos: tintas navy; el dorado marca ---------- */
+  --chart-1: var(--navy-800);
+  --chart-2: var(--navy-400);
+  --chart-3: var(--navy-200);
+  --chart-4: var(--paper-400);
+  --chart-5: var(--paper-300);
+  --chart-efectivo: var(--paper-300);
+  --chart-aporte: var(--mark);
+  --chart-grid: var(--paper-200);
+  --tile-rgb: 12, 26, 54; /* navy-800, para tintes proporcionales */
 
-  --shadow-xs: 0 1px 0 rgba(20, 37, 71, 0.04), 0 1px 2px rgba(20, 37, 71, 0.04);
-  --shadow-sm: 0 1px 2px rgba(20, 37, 71, 0.06), 0 2px 6px rgba(20, 37, 71, 0.04);
-  --ring-focus: 0 0 0 3px rgba(20, 37, 71, 0.18);
-
-  --radius-xs: 2px;
-  --radius-md: 6px;
-  --radius-pill: 999px;
-
+  /* ---------- Tipografía ---------- */
+  --text-display: 60px; /* el patrimonio */
+  --text-headline: 32px; /* título de página */
+  --text-title: 24px; /* título de sección (serif) */
+  --text-lead: 18px;
+  --text-body: 15px;
+  --text-sm: 13px;
+  --text-xs: 12px;
+  --text-micro: 11px; /* rótulos en mayúsculas de tablas y franja */
+  --ls-display: -0.025em;
+  --ls-title: -0.015em;
   --ls-wide: 0.04em;
   --ls-eyebrow: 0.12em;
 
+  /* ---------- Espaciado (base 4) ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --gutter: 20px;
+
+  /* ---------- Formas ---------- */
+  --radius-xs: 3px; /* resaltador, swatches */
+  --radius-sm: 8px; /* tooltips, chips cuadrados */
+  --radius-md: 12px; /* inputs, tiles, cajas internas */
+  --radius-lg: 20px; /* tarjetas */
+  --radius-pill: 999px; /* botones, toggles, barra de pestañas */
+
+  /* ---------- Elevación: casi plana; borde 1 px + sombra de papel ---------- */
+  --shadow-xs: 0 1px 2px rgba(6, 15, 37, 0.04);
+  --shadow-sm: 0 2px 20px rgba(6, 15, 37, 0.05); /* tarjeta apoyada en la hoja */
+  --shadow-float: 0 4px 24px rgba(6, 15, 37, 0.12); /* barra de pestañas flotante */
+  --ring-focus: 0 0 0 3px rgba(168, 132, 44, 0.45); /* anillo dorado */
+
+  /* ---------- Movimiento ---------- */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-trazo: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 140ms;
   --dur-base: 200ms;
+  --dur-slow: 520ms;
+
+  --scrollbar: var(--paper-300);
+}
+
+/* =========================================================
+   El mismo cuaderno de noche: navy profundo de fondo, el
+   papel pasa a ser la tinta y el dorado sigue marcando.
+   Solo pantalla: la impresión de /reporte queda en papel.
+   ========================================================= */
+@media screen and (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --bg-app: #0a1429;
+    --bg-surface: #101c38;
+    --bg-sunken: #142342;
+
+    --fg-1: var(--paper-100);
+    --fg-body: var(--paper-200);
+    --fg-2: #c9c3b3;
+    --fg-3: #9b9a95;
+
+    --border-1: #1e2d4d;
+    --border-2: #2a3c60;
+    --border-ink: var(--paper-200);
+    --border-focus: var(--gold-300);
+    --rule-strong: var(--paper-300);
+
+    --mark: var(--gold-300);
+    --mark-fill: var(--gold-300);
+    --mark-text: var(--gold-300);
+
+    --good: #86c79f;
+    --bad: #e8917f;
+
+    --band: #030a1a;
+    --band-edge: rgba(217, 184, 106, 0.35);
+
+    --accent: var(--paper-100);
+    --accent-hover: #ffffff;
+    --on-accent: var(--navy-900);
+    --link: var(--paper-100);
+    --link-hover: var(--gold-300);
+    --tone-navy: var(--navy-200);
+    --logo-ring: #2a3c60;
+
+    --chart-1: var(--paper-100);
+    --chart-2: #9aaccb;
+    --chart-3: #4f6890;
+    --chart-4: #8b867a;
+    --chart-5: #5d5a51;
+    --chart-efectivo: #5d5a51;
+    --chart-grid: #1e2d4d;
+    --tile-rgb: 236, 232, 221;
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 2px 20px rgba(0, 0, 0, 0.25);
+    --shadow-float: 0 4px 24px rgba(0, 0, 0, 0.45);
+    --ring-focus: 0 0 0 3px rgba(217, 184, 106, 0.5);
+
+    --scrollbar: #2a3c60;
+  }
 }
 
 @theme inline {
@@ -96,80 +219,70 @@
   --font-sans: var(--font-body);
 }
 
-
 body {
   background: var(--bg-app);
-  color: var(--fg-1);
+  color: var(--fg-body);
   font-family: var(--font-body), "Inter Tight", -apple-system, sans-serif;
-  font-size: 15px;
+  font-size: var(--text-body);
   line-height: 1.45;
+  font-variant-numeric: tabular-nums lining-nums;
+  caret-color: var(--mark);
+  scrollbar-color: var(--scrollbar) transparent;
 }
 
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+
+/* Serif de la marca: montos y títulos. Óptica automática para que el
+   tamaño grande se vea suave y el chico, robusto. */
 .font-display {
   font-family: var(--font-display), "Source Serif 4", Georgia, serif;
   font-optical-sizing: auto;
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
+/* Cifras y tickers en tablas y en la franja. */
 .font-mono {
   font-family: var(--font-mono-wb), "JetBrains Mono", monospace;
+  font-variant-numeric: tabular-nums;
 }
 
+/* A mano, con cuentagotas: una anotación al margen por pantalla, como mucho. */
+.font-mano {
+  font-family: var(--font-mano), "Caveat", cursive;
+}
+
+/* Rótulo chico en mayúsculas: encabezados de tabla y de la franja. */
 .etiqueta {
-  font-size: 12px;
+  font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: var(--ls-eyebrow);
   text-transform: uppercase;
   color: var(--fg-3);
 }
 
-/* Filete dorado doble — la firma tipográfica del sistema. */
+/* Título de sección: serif, sin mayúsculas. */
+.titulo-seccion {
+  font-family: var(--font-display), "Source Serif 4", Georgia, serif;
+  font-optical-sizing: auto;
+  font-size: var(--text-title);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: var(--ls-title);
+  color: var(--fg-1);
+}
+
+/* Filete dorado doble: la firma del logo. */
 .filete-dorado {
-  height: 4px;
-  border-top: 2px solid var(--gold-500);
+  height: 6px;
+  border-top: 3px solid var(--gold-500);
   border-bottom: 1px solid var(--gold-300);
-}
-
-/* Grano de papel sutil sobre todo el fondo (solo pantalla). */
-@media screen {
-  body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    pointer-events: none;
-    opacity: 0.05;
-    mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
-  }
-}
-
-/* =========================================================
-   Paneles editoriales — en desktop las cajas se vuelven
-   secciones de broadsheet: regla superior tinta + numeración
-   de sección (Nº 01, Nº 02…) en el eyebrow.
-   ========================================================= */
-.contenido-editorial {
-  counter-reset: seccion;
-}
-.panel-wb {
-  counter-increment: seccion;
-}
-@media screen and (min-width: 768px) {
-  .panel-wb {
-    background: transparent;
-    border: 0;
-    border-top: 2px solid var(--navy-900);
-    border-radius: 0;
-    box-shadow: none;
-    padding: 24px 2px 10px;
-  }
-  .panel-wb > .panel-cabecera .etiqueta::before {
-    content: "Nº " counter(seccion, decimal-leading-zero) "  ·  ";
-    font-family: var(--font-mono-wb), "JetBrains Mono", monospace;
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    color: var(--gold-700);
-  }
 }
 
 /* Fuerza el color exacto de fondos/decoraciones al imprimir. */
@@ -179,42 +292,59 @@ body {
 }
 
 ::selection {
-  background: var(--navy-100);
+  background: color-mix(in srgb, var(--gold-300) 55%, transparent);
   color: var(--navy-900);
 }
+@media screen and (prefers-color-scheme: dark) {
+  ::selection {
+    background: color-mix(in srgb, var(--gold-300) 40%, transparent);
+    color: var(--paper-50);
+  }
+}
 
-/* En @layer base para que las utilities (p.ej. text-[var(--paper-50)] en
-   botones-link) puedan pisarla; sin layer, esta regla les ganaba el cascade. */
+/* En @layer base para que las utilities puedan pisarla. */
 @layer base {
+  :focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+  }
   a {
-    color: var(--navy-700);
+    color: var(--link);
     text-underline-offset: 3px;
     text-decoration-thickness: 1px;
+    text-decoration-color: var(--mark);
   }
   a:hover {
-    color: var(--navy-500);
+    color: var(--link-hover);
   }
 }
 
-@keyframes aparecer {
+/* =========================================================
+   Movimiento: entrada de cifras y trazo del marcador.
+   Todo parte de un estado ya visible si se pide menos movimiento.
+   ========================================================= */
+@keyframes entra {
   from {
     opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+    transform: translateY(6px);
   }
 }
-
-.revela {
-  animation: aparecer 0.5s var(--ease-out) both;
+@keyframes trazo {
+  from {
+    stroke-dashoffset: var(--largo, 400);
+  }
 }
-
+@media (prefers-reduced-motion: no-preference) {
+  .entra {
+    animation: entra var(--dur-slow) var(--ease-out) both;
+    animation-delay: var(--retraso, 0ms);
+  }
+  .trazo {
+    stroke-dasharray: var(--largo, 400);
+    animation: trazo 700ms var(--ease-trazo) 350ms both;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .revela {
-    animation: none;
-  }
   * {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
@@ -234,8 +364,6 @@ textarea {
 
 /* =========================================================
    Impresión — reglas del documento de /reporte (A4).
-   Antes vivían en un <style jsx global> dentro de la página;
-   el proyecto no depende de styled-jsx.
    ========================================================= */
 @media print {
   @page {
@@ -264,8 +392,6 @@ textarea {
   thead {
     display: table-header-group;
   }
-  /* La tabla de posiciones nunca se recorta al imprimir: sin scroll,
-     tipografía compacta y ancho fijo al de la hoja. */
   .overflow-x-auto {
     overflow: visible !important;
   }
@@ -278,7 +404,8 @@ textarea {
   .tabla-posiciones .font-mono {
     font-size: 9px !important;
   }
-  .tabla-posiciones td:first-child {
+  .tabla-posiciones td:first-child,
+  .tabla-posiciones th:first-child {
     white-space: normal !important;
   }
 }

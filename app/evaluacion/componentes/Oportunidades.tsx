@@ -8,7 +8,31 @@ export interface OportunidadesProps {
   hayCandidatos: boolean
   // Devuelve el mensaje de error a mostrar junto al input, o null si salió bien.
   onAgregar: (ticker: string, tipo: 'acciones' | 'cripto') => Promise<string | null>
-  children: React.ReactNode // grid de tarjetas ya armado por la página
+  children: React.ReactNode // grupos (<GrupoOportunidades>) ya armados por la página
+}
+
+// Un grupo de candidatos con el mismo veredicto. Las tarjetas son filas
+// plegables: el veredicto y el momentum se leen sin abrir nada.
+export function GrupoOportunidades({
+  titulo,
+  color,
+  cantidad,
+  children,
+}: {
+  titulo: string
+  color?: string
+  cantidad: number
+  children: React.ReactNode
+}) {
+  return (
+    <section>
+      <h3 className="mb-2.5 flex items-baseline gap-2 font-display text-[18px] font-medium" style={{ color: color ?? 'var(--fg-2)' }}>
+        {titulo}
+        <span className="font-sans text-[13px] font-normal text-[var(--fg-3)]">{cantidad}</span>
+      </h3>
+      <div className="grid items-start gap-2 sm:grid-cols-2 xl:grid-cols-3">{children}</div>
+    </section>
+  )
 }
 
 export function Oportunidades({ hayCandidatos, onAgregar, children }: OportunidadesProps) {
@@ -29,8 +53,8 @@ export function Oportunidades({ hayCandidatos, onAgregar, children }: Oportunida
   }
 
   return (
-    <Panel titulo="Oportunidades" className="revela">
-      <form onSubmit={agregar} className="mb-5 flex flex-wrap items-center gap-2">
+    <Panel titulo="Oportunidades">
+      <form onSubmit={agregar} className="mb-6 flex flex-wrap items-center gap-2">
         <label htmlFor="ticker-watchlist" className="sr-only">
           Ticker
         </label>
@@ -62,13 +86,13 @@ export function Oportunidades({ hayCandidatos, onAgregar, children }: Oportunida
           {cargando ? 'Validando…' : 'Agregar'}
         </button>
         {error && (
-          <p role="alert" className="text-xs" style={{ color: 'var(--bad)' }}>
+          <p role="alert" className="basis-full text-xs" style={{ color: 'var(--bad)' }}>
             {error}
           </p>
         )}
       </form>
       {hayCandidatos ? (
-        <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]">{children}</div>
+        <div className="flex flex-col gap-6">{children}</div>
       ) : (
         <EstadoVacio
           titulo="Sin candidatos en la watchlist"
