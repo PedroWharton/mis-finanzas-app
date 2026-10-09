@@ -148,19 +148,37 @@ export default function Predicciones() {
     }).catch(() => console.warn('predicciones: no se pudo guardar el registro'))
   }, [datos, calculo])
 
-  // Dato clave del header: veredicto del modelo sobre el navy.
+  // Dato clave del header: el veredicto del modelo, con la proporción de
+  // tickers ganados frente a la mitad (el umbral para agregar valor).
+  const agregaValor = calculo ? calculo.ganadas * 2 > calculo.evaluaciones.length : false
   const dato =
     calculo && calculo.evaluaciones.length > 0 ? (
-      <div>
-        <p className="font-display text-[22px] font-medium leading-snug text-[var(--fg-on-hero)] sm:text-[26px]">
-          El modelo gana{' '}
-          <span className="tabular-nums">
+      <div className="max-w-[560px]">
+        <p className="font-display text-[22px] italic leading-snug text-[var(--fg-1)] sm:text-[26px]">
+          {agregaValor ? 'El modelo le gana al baseline' : 'El modelo no está agregando valor'}
+        </p>
+        <div className="mt-5" aria-hidden="true">
+          <div className="relative h-2.5 rounded-[var(--radius-pill)] bg-[var(--bg-sunken)]">
+            <div
+              className="h-full rounded-[var(--radius-pill)]"
+              style={{
+                width: `${(calculo.ganadas / calculo.evaluaciones.length) * 100}%`,
+                background: 'var(--mark)',
+              }}
+            />
+            <span className="absolute -top-1 left-1/2 h-[18px] w-[1.5px] bg-[var(--fg-1)]" />
+          </div>
+          <div className="relative mt-1.5 h-4 text-[11px] text-[var(--fg-3)]">
+            <span className="absolute left-1/2 -translate-x-1/2">mitad</span>
+          </div>
+        </div>
+        <p className="mt-2 text-[14px] leading-relaxed text-[var(--fg-2)]">
+          Gana en{' '}
+          <span className="font-semibold text-[var(--fg-1)]">
             {calculo.ganadas} de {calculo.evaluaciones.length}
           </span>{' '}
-          evaluaciones
-        </p>
-        <p className="mt-1 text-[13px]" style={{ color: 'var(--fg-hero-muted)' }}>
-          Frente al baseline, por error mediano a 1 y 3 meses
+          tickers: su error mediano es menor que el del baseline a 1 y a 3 meses. Para agregar valor tiene que
+          ganar en más de la mitad.
         </p>
       </div>
     ) : undefined
@@ -203,13 +221,13 @@ export default function Predicciones() {
     <AppShell titulo="Predicciones" ancha dato={dato}>
       <div className="flex flex-col gap-6 sm:gap-8">
         {historicos.desactualizado && (
-          <p aria-live="polite" className="revela flex items-center gap-1.5 text-[13px] text-[var(--fg-3)]">
+          <p aria-live="polite" className="flex items-center gap-1.5 text-[13px] text-[var(--fg-3)]">
             <span
               aria-hidden="true"
               className="inline-block h-[7px] w-[7px] rounded-[var(--radius-pill)]"
-              style={{ background: 'var(--bordeaux-500)' }}
+              style={{ background: 'var(--bad)' }}
             />
-            Históricos desactualizados: las predicciones se muestran pero NO se registran
+            Históricos desactualizados: las predicciones se muestran pero no se registran
             {historicos.fecha && ` · último dato ${fechaLarga.format(parseISO(historicos.fecha))}`}
           </p>
         )}
@@ -218,27 +236,25 @@ export default function Predicciones() {
           <EstadoVacio
             titulo="No hay datos históricos"
             detalle="Sin conexión y sin caché: no se pueden calcular predicciones. Reintentá cuando vuelva la conexión."
+            accion={
+              <button type="button" onClick={() => window.location.reload()} className={claseBotonSecundario}>
+                Reintentar
+              </button>
+            }
           />
         ) : (
           calculo && (
             <>
-              {calculo.evaluaciones.length > 0 && calculo.ganadas * 2 <= calculo.evaluaciones.length && (
-                <p className="revela text-sm font-semibold" style={{ color: 'var(--bad)' }}>
-                  El modelo NO está agregando valor sobre el baseline: tomá los p50 con pinzas y mirá las bandas
-                  del baseline (precio actual ± incertidumbre histórica).
+              {calculo.evaluaciones.length > 0 && !agregaValor && (
+                <p className="max-w-[62ch] px-1 font-display text-[18px] leading-relaxed text-[var(--fg-1)]">
+                  Tomá los p50 con pinzas y mirá las bandas del baseline (precio actual ± incertidumbre histórica).
                 </p>
               )}
 
-              <div className="revela">
-                <TablaEvaluacion evaluaciones={calculo.evaluaciones} insuficientes={calculo.insuficientes} />
-              </div>
-
-              <div className="revela">
-                <Vigentes filas={calculo.filas} />
-              </div>
+              <Vigentes filas={calculo.filas} />
 
               {calculo.excluidos.length > 0 && (
-                <p className="revela text-xs text-[var(--fg-3)]">
+                <p className="-mt-2 text-xs text-[var(--fg-3)] sm:-mt-4">
                   Sin histórico suficiente (menos de {MIN_DIAS_PREDICCION} datos o serie inválida):{' '}
                   <span translate="no" className="font-mono">
                     {calculo.excluidos.join(', ')}
@@ -246,14 +262,14 @@ export default function Predicciones() {
                 </p>
               )}
 
-              <div className="revela">
-                <Historial registros={registrosMostrados} />
-              </div>
+              <TablaEvaluacion evaluaciones={calculo.evaluaciones} insuficientes={calculo.insuficientes} />
+
+              <Historial registros={registrosMostrados} />
             </>
           )
         )}
 
-        <footer className="revela rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--bg-sunken)] px-6 py-5 text-xs leading-relaxed text-[var(--fg-3)]">
+        <footer className="max-w-[78ch] border-t border-[var(--border-1)] px-1 pt-5 text-xs leading-relaxed text-[var(--fg-3)]">
           {DISCLAIMER}
         </footer>
       </div>

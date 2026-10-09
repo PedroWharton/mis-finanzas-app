@@ -24,13 +24,13 @@ function Fila({
   return (
     <li className="min-w-0">
       <div className="flex items-baseline justify-between gap-3 text-[13px]">
-        <span className="flex min-w-0 items-baseline gap-2 font-semibold text-[var(--fg-1)]">
+        <span className="flex min-w-0 items-baseline gap-2 font-medium text-[var(--fg-1)]">
           <Swatch color={color} />
           <span className="min-w-0 break-words">{nombre}</span>
         </span>
-        <span className="shrink-0 tabular-nums text-[var(--fg-2)]">
+        <span className="shrink-0 font-mono text-[12px] text-[var(--fg-2)]">
           {usd.format(valor)} ·{' '}
-          <span className="font-semibold text-[var(--fg-1)]">{pct.format(proporcion)}</span>
+          <span className="text-[var(--fg-1)]">{pct.format(proporcion)}</span>
         </span>
       </div>
       <div className="mt-1 h-[6px] w-full overflow-hidden rounded-[var(--radius-pill)] bg-[var(--bg-sunken)]">
@@ -45,10 +45,10 @@ function Fila({
 
 export function Concentracion({ posiciones, plataformas, valorTotal }: ConcentracionProps) {
   return (
-    <Panel titulo="Concentración" className="revela">
+    <Panel titulo="Concentración">
       <div className="grid gap-7 sm:grid-cols-2">
         <div>
-          <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[var(--ls-wide)] text-[var(--fg-2)]">
+          <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[var(--ls-eyebrow)] text-[var(--fg-3)]">
             Por posición
           </h3>
           <ul className="flex flex-col gap-3">
@@ -64,7 +64,7 @@ export function Concentracion({ posiciones, plataformas, valorTotal }: Concentra
           </ul>
         </div>
         <div>
-          <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[var(--ls-wide)] text-[var(--fg-2)]">
+          <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[var(--ls-eyebrow)] text-[var(--fg-3)]">
             Por plataforma
           </h3>
           <ul className="flex flex-col gap-3">

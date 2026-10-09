@@ -24,14 +24,15 @@ import {
 import { predecir, type Banda } from '@/lib/predictor'
 import { proyectarBandas, type PuntoBanda } from '@/lib/proyeccion'
 import { evaluarPosicion, type Evaluacion, type Veredicto } from '@/lib/senales'
+import { VEREDICTO_COLOR, VEREDICTO_LABEL } from '@/app/componentes/ui/colores'
 import type { EntradaWatchlist } from '@/lib/watchlist'
 import { backtest } from '@/lib/backtest'
 import { type PosicionInfo } from './componentes/compartido'
 import { ResumenCartera } from './componentes/ResumenCartera'
-import { Alertas } from './componentes/Alertas'
+import { Alertas, type CambioSenal } from './componentes/Alertas'
 import { TarjetaActivo, TarjetaSinDatos, type LineaBacktest } from './componentes/TarjetaActivo'
 import { Concentracion } from './componentes/Concentracion'
-import { Oportunidades } from './componentes/Oportunidades'
+import { GrupoOportunidades, Oportunidades } from './componentes/Oportunidades'
 import { Simulador } from './componentes/Simulador'
 
 const DISCLAIMER =
@@ -84,6 +85,9 @@ interface EvaluacionesDoc {
   fecha: string
   veredictos: Record<string, Veredicto>
 }
+
+// Orden de los grupos de la watchlist (con peso 0 nunca sale "reducir").
+const GRUPOS_OPORTUNIDADES: Veredicto[] = ['comprar', 'mantener', 'reducir', 'vender']
 
 // reducir no puede darse con peso 0; está por exhaustividad del Record.
 const ORDEN_VEREDICTO: Record<Veredicto, number> = { comprar: 0, mantener: 1, reducir: 1, vender: 2 }
@@ -447,10 +451,10 @@ export default function Evaluacion() {
       dato={
         calculo && !sinHistoricos ? (
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <p className="font-display text-[32px] font-medium leading-none tabular-nums text-[var(--fg-on-hero)] sm:text-[38px]">
+            <p className="font-display text-[34px] font-medium leading-none tracking-[-0.02em] text-[var(--fg-1)] sm:text-[40px]">
               {usdEntero.format(calculo.valorTotal)}
             </p>
-            <p className="text-[13px] font-semibold text-[var(--fg-hero-muted)]">
+            <p className="text-[14px] font-medium" style={{ color: nAlertas > 0 ? 'var(--bad)' : 'var(--fg-3)' }}>
               {nAlertas === 0
                 ? 'Sin alertas activas'
                 : nAlertas === 1
@@ -461,13 +465,13 @@ export default function Evaluacion() {
         ) : undefined
       }
     >
-      <div className="flex flex-col gap-7">
+      <div className="flex flex-col gap-4 md:gap-6">
         {historicos.desactualizado && (
-          <p aria-live="polite" className="revela flex items-center gap-1.5 text-[13px] text-[var(--fg-3)]">
+          <p aria-live="polite" className="flex items-center gap-1.5 text-[13px] text-[var(--fg-3)]">
             <span
               aria-hidden="true"
               className="inline-block h-[7px] w-[7px] rounded-[var(--radius-pill)]"
-              style={{ background: 'var(--bordeaux-500)' }}
+              style={{ background: 'var(--bad)' }}
             />
             Históricos desactualizados
             {historicos.fecha && ` · último dato ${fechaLarga.format(parseISO(historicos.fecha))}`}
@@ -483,7 +487,6 @@ export default function Evaluacion() {
           calculo && (
             <>
               <ResumenCartera
-                valorTotal={calculo.valorTotal}
                 volCartera={calculo.volCartera}
                 sharpeCartera={calculo.sharpeCartera}
                 drawdownCartera={calculo.drawdownCartera}
@@ -491,21 +494,25 @@ export default function Evaluacion() {
               />
 
               <Alertas
-                alertas={[
-                  ...Object.entries(cambios).map(
-                    ([t, antes]) => `${t}: ${antes} → ${calculo.veredictosFrescos[t]}`
-                  ),
-                  ...calculo.alertas,
-                ]}
+                cambios={Object.entries(cambios).map(
+                  ([t, antes]): CambioSenal => ({
+                    ticker: t,
+                    antes,
+                    ahora: calculo.veredictosFrescos[t],
+                    enCartera: calculo.posicionesEvaluadas.some((p) => p.ticker === t),
+                  })
+                )}
+                alertas={calculo.alertas}
               />
 
-              <Panel titulo="Posiciones" className="revela">
+              <Panel titulo="Posiciones">
                 <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]">
                   {calculo.posicionesEvaluadas.map((p) => (
                     <TarjetaActivo
                       key={p.ticker}
                       ticker={p.ticker}
                       nombre={p.nombre}
+                      ancla={p.ticker}
                       evaluacion={p.evaluacion}
                       ind={p.ind}
                       vol={p.vol}
@@ -542,45 +549,64 @@ export default function Evaluacion() {
                 hayCandidatos={calculo.candidatos.length + calculo.candidatosSinDatos.length > 0}
                 onAgregar={agregarAWatchlist}
               >
-                {calculo.candidatos.map((c) => (
-                  <TarjetaActivo
-                    key={c.ticker}
-                    ticker=""
-                    nombre={c.ticker}
-                    evaluacion={c.evaluacion}
-                    ind={c.ind}
-                    vol={c.vol}
-                    drawdown={c.drawdown}
-                    mostrarMomentum12
-                    onQuitar={() => quitarDeWatchlist(c.ticker)}
-                    notaDatos={
-                      historicos.fecha && diasDeRezago(c.ultimaFecha, historicos.fecha) > 7
-                        ? `Datos al ${fechaLarga.format(parseISO(c.ultimaFecha))}`
-                        : undefined
-                    }
-                    cambio={cambios[c.ticker]}
-                    backtest={c.backtest}
-                    prediccion1m={c.pred1m}
-                  >
-                    <Simulador
-                      ticker={c.ticker}
-                      serie={historicos.series[c.ticker]}
-                      tipo={c.tipo}
-                      valores={calculo.valoresPorTicker}
-                      series={historicos.series}
-                      tipos={calculo.tiposPorClave}
-                    />
-                  </TarjetaActivo>
-                ))}
-                {calculo.candidatosSinDatos.map((c) => (
-                  <TarjetaSinDatos
-                    key={c.ticker}
-                    ticker=""
-                    nombre={c.ticker}
-                    nota="sin datos de Yahoo"
-                    onQuitar={() => quitarDeWatchlist(c.ticker)}
-                  />
-                ))}
+                {GRUPOS_OPORTUNIDADES.map((v) => {
+                  const grupo = calculo.candidatos.filter((c) => c.evaluacion.veredicto === v)
+                  if (grupo.length === 0) return null
+                  return (
+                    <GrupoOportunidades
+                      key={v}
+                      titulo={VEREDICTO_LABEL[v]}
+                      color={VEREDICTO_COLOR[v]}
+                      cantidad={grupo.length}
+                    >
+                      {grupo.map((c) => (
+                        <TarjetaActivo
+                          key={c.ticker}
+                          ticker=""
+                          nombre={c.ticker}
+                          ancla={c.ticker}
+                          compacta
+                          evaluacion={c.evaluacion}
+                          ind={c.ind}
+                          vol={c.vol}
+                          drawdown={c.drawdown}
+                          mostrarMomentum12
+                          onQuitar={() => quitarDeWatchlist(c.ticker)}
+                          notaDatos={
+                            historicos.fecha && diasDeRezago(c.ultimaFecha, historicos.fecha) > 7
+                              ? `Datos al ${fechaLarga.format(parseISO(c.ultimaFecha))}`
+                              : undefined
+                          }
+                          cambio={cambios[c.ticker]}
+                          backtest={c.backtest}
+                          prediccion1m={c.pred1m}
+                        >
+                          <Simulador
+                            ticker={c.ticker}
+                            serie={historicos.series[c.ticker]}
+                            tipo={c.tipo}
+                            valores={calculo.valoresPorTicker}
+                            series={historicos.series}
+                            tipos={calculo.tiposPorClave}
+                          />
+                        </TarjetaActivo>
+                      ))}
+                    </GrupoOportunidades>
+                  )
+                })}
+                {calculo.candidatosSinDatos.length > 0 && (
+                  <GrupoOportunidades titulo="Sin datos de Yahoo" cantidad={calculo.candidatosSinDatos.length}>
+                    {calculo.candidatosSinDatos.map((c) => (
+                      <TarjetaSinDatos
+                        key={c.ticker}
+                        ticker=""
+                        nombre={c.ticker}
+                        nota="Yahoo no devolvió histórico: no se puede evaluar."
+                        onQuitar={() => quitarDeWatchlist(c.ticker)}
+                      />
+                    ))}
+                  </GrupoOportunidades>
+                )}
               </Oportunidades>
 
               <Concentracion
@@ -592,7 +618,7 @@ export default function Evaluacion() {
           )
         )}
 
-        <footer className="revela rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--bg-sunken)] px-6 py-5 text-xs leading-relaxed text-[var(--fg-3)]">
+        <footer className="max-w-[78ch] border-t border-[var(--border-1)] px-1 pt-5 text-xs leading-relaxed text-[var(--fg-3)]">
           {DISCLAIMER}
         </footer>
       </div>

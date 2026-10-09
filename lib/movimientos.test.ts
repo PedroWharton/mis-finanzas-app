@@ -13,6 +13,13 @@ describe('validarMovimientos', () => {
       expect('anioRenta' in r.operaciones[0]).toBe(false)
     }
   })
+  it('conserva anioRenta en operaciones de renta', () => {
+    const div = { fecha: '2026-01-05', tipo: 'dividendo', plataforma: 'IOL', ticker: 'YM44O', montoUSD: 30 }
+    const r = validarMovimientos({ operaciones: [{ ...div, anioRenta: '2025' }] })
+    expect(r.ok).toBe(true)
+    if (r.ok) expect(r.operaciones[0].anioRenta).toBe(2025)
+    expect(validarMovimientos({ operaciones: [{ ...div, anioRenta: 25.5 }] }).ok).toBe(false)
+  })
   it('normaliza ticker a mayúsculas y coerciona números en string', () => {
     const r = validarMovimientos({ operaciones: [{ ...compra, ticker: 'meli', montoUSD: '900', cantidad: '0.5' }] })
     expect(r.ok).toBe(true)

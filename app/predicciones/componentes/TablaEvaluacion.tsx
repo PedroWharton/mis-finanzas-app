@@ -20,84 +20,193 @@ export interface EvaluacionCompleta {
 
 const dir = (v: number | null) => (v === null ? '—' : pct.format(v))
 
+const claseTh = 'py-2 pr-3 text-[11px] font-semibold uppercase tracking-[var(--ls-eyebrow)] text-[var(--fg-3)]'
+
 function Veredicto({ gana }: { gana: boolean }) {
   return (
-    <span
-      className="text-[11px] font-semibold uppercase tracking-[var(--ls-wide)]"
-      style={{ color: gana ? 'var(--good)' : 'var(--bad)' }}
-    >
-      {gana ? 'gana' : 'no gana'}
+    <span className="whitespace-nowrap text-[13px] font-semibold" style={{ color: gana ? 'var(--good)' : 'var(--bad)' }}>
+      {gana ? 'Gana' : 'No gana'}
     </span>
   )
 }
 
-// Móvil: colapsable por ticker — el veredicto (gana / no gana) se ve cerrado;
-// al abrir, una mini-tabla de 3 columnas (métrica / modelo / baseline). Con
-// ~30 tickers, las tarjetas abiertas harían la página interminable.
-function TarjetaEvaluacion({ e, abierto }: { e: EvaluacionCompleta; abierto: boolean }) {
-  const filas: { etiqueta: string; modelo: string; baseline: string }[] = [
-    { etiqueta: 'Error 1 m', modelo: pct.format(e.modelo.m1.errorMediano), baseline: pct.format(e.baseline.m1.errorMediano) },
-    { etiqueta: 'Error 3 m', modelo: pct.format(e.modelo.m3.errorMediano), baseline: pct.format(e.baseline.m3.errorMediano) },
-    { etiqueta: 'Cobert. 1 m', modelo: pct.format(e.modelo.m1.cobertura), baseline: pct.format(e.baseline.m1.cobertura) },
-    { etiqueta: 'Cobert. 3 m', modelo: pct.format(e.modelo.m3.cobertura), baseline: pct.format(e.baseline.m3.cobertura) },
-    { etiqueta: 'Direc. 1 m', modelo: dir(e.modelo.m1.aciertoDireccional), baseline: dir(e.baseline.m1.aciertoDireccional) },
-    { etiqueta: 'Direc. 3 m', modelo: dir(e.modelo.m3.aciertoDireccional), baseline: dir(e.baseline.m3.aciertoDireccional) },
-  ]
+// Celda "modelo frente a baseline": el valor del modelo manda; el del
+// baseline queda al lado, más callado, para comparar sin cambiar de columna.
+function Par({ modelo, baseline, apilado = false }: { modelo: string; baseline: string; apilado?: boolean }) {
   return (
-    <Colapsable
-      nivel={2}
-      abierto={abierto}
-      className="border-t border-[var(--border-1)] first:border-t-0"
-      resumen={
-        <span translate="no" className="font-mono text-[13px] font-semibold text-[var(--fg-1)]">
-          {e.ticker}
-        </span>
-      }
-      meta={
-        <span className="text-xs text-[var(--fg-3)]">
-          <Veredicto gana={e.gana} /> · n={e.modelo.m1.n}
-        </span>
-      }
-    >
-      <table className="w-full border-collapse text-xs">
+    <span className={`font-mono ${apilado ? 'flex flex-col items-end leading-tight' : 'whitespace-nowrap'}`}>
+      <span className="font-semibold text-[var(--fg-1)]">{modelo}</span>
+      {!apilado && ' '}
+      <span className={`text-[var(--fg-3)] ${apilado ? 'text-[11px]' : ''}`}>{baseline}</span>
+    </span>
+  )
+}
+
+// Móvil: columnas prioritarias. El veredicto se decide por error mediano a 1
+// y 3 meses, así que eso va a la vista; cobertura y dirección, plegadas.
+function TablaMovil({ evaluaciones }: { evaluaciones: EvaluacionCompleta[] }) {
+  return (
+    <div className="md:hidden">
+      <table className="w-full border-collapse text-[13px]">
+        <caption className="sr-only">Error mediano del modelo y del baseline por ticker</caption>
         <thead>
-          <tr className="text-[11px] font-semibold uppercase tracking-[var(--ls-wide)] text-[var(--fg-3)]">
-            <th className="py-1 pr-2 text-left font-semibold" scope="col">
-              Métrica
+          <tr className="border-b border-[var(--border-2)] text-left">
+            <th scope="col" className={claseTh}>
+              Ticker
             </th>
-            <th className="py-1 pr-2 text-right font-semibold" scope="col">
-              Modelo
+            <th scope="col" className={`${claseTh} text-right`}>
+              Error 1 m
             </th>
-            <th className="py-1 pr-0 text-right font-semibold" scope="col">
-              Baseline
+            <th scope="col" className={`${claseTh} text-right`}>
+              Error 3 m
+            </th>
+            <th scope="col" className={`${claseTh} pr-0 text-right`}>
+              <span className="sr-only">Veredicto</span>
             </th>
           </tr>
         </thead>
-        <tbody className="text-[var(--fg-2)]">
-          {filas.map((f) => (
-            <tr key={f.etiqueta} className="border-t border-[var(--border-1)]">
-              <td className="py-1 pr-2 text-[var(--fg-3)]">{f.etiqueta}</td>
-              <td className="py-1 pr-2 text-right tabular-nums font-semibold text-[var(--fg-1)]">{f.modelo}</td>
-              <td className="py-1 pr-0 text-right tabular-nums">{f.baseline}</td>
+        <tbody>
+          {evaluaciones.map((e) => (
+            <tr key={e.ticker} className="border-b border-[var(--border-1)]">
+              <th scope="row" translate="no" className="py-2.5 pr-3 text-left font-mono text-[13px] font-medium text-[var(--fg-1)]">
+                {e.ticker}
+              </th>
+              <td className="py-2.5 pr-3 text-right">
+                <Par apilado modelo={pct.format(e.modelo.m1.errorMediano)} baseline={pct.format(e.baseline.m1.errorMediano)} />
+              </td>
+              <td className="py-2.5 pr-3 text-right">
+                <Par apilado modelo={pct.format(e.modelo.m3.errorMediano)} baseline={pct.format(e.baseline.m3.errorMediano)} />
+              </td>
+              <td className="py-2.5 pr-0 text-right">
+                <Veredicto gana={e.gana} />
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
-    </Colapsable>
+      <Colapsable nivel={2} className="mt-3" resumen="Cobertura y acierto direccional">
+        <table className="w-full border-collapse text-[13px]">
+          <thead>
+            <tr className="border-b border-[var(--border-2)] text-left">
+              <th scope="col" className={claseTh}>
+                Ticker
+              </th>
+              <th scope="col" className={`${claseTh} text-right`}>
+                Cob. 1 m
+              </th>
+              <th scope="col" className={`${claseTh} text-right`}>
+                Cob. 3 m
+              </th>
+              <th scope="col" className={`${claseTh} text-right`}>
+                Dir. 1 m
+              </th>
+              <th scope="col" className={`${claseTh} pr-0 text-right`}>
+                Dir. 3 m
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {evaluaciones.map((e) => (
+              <tr key={e.ticker} className="border-b border-[var(--border-1)]">
+                <th scope="row" translate="no" className="py-2 pr-2 text-left font-mono text-[12px] font-medium text-[var(--fg-1)]">
+                  {e.ticker}
+                </th>
+                <td className="py-2 pr-2 text-right">
+                  <Par apilado modelo={pct.format(e.modelo.m1.cobertura)} baseline={pct.format(e.baseline.m1.cobertura)} />
+                </td>
+                <td className="py-2 pr-2 text-right">
+                  <Par apilado modelo={pct.format(e.modelo.m3.cobertura)} baseline={pct.format(e.baseline.m3.cobertura)} />
+                </td>
+                <td className="py-2 pr-2 text-right font-mono text-[var(--fg-2)]">{dir(e.modelo.m1.aciertoDireccional)}</td>
+                <td className="py-2 pr-0 text-right font-mono text-[var(--fg-2)]">{dir(e.modelo.m3.aciertoDireccional)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Colapsable>
+    </div>
   )
 }
 
-function Celdas({ m }: { m: { m1: MetricasHorizonte; m3: MetricasHorizonte } }) {
+function TablaEscritorio({ evaluaciones }: { evaluaciones: EvaluacionCompleta[] }) {
+  const grupo = 'border-l border-[var(--border-1)] pl-4'
   return (
-    <>
-      <td className="py-1.5 pr-3 text-right tabular-nums">{pct.format(m.m1.cobertura)}</td>
-      <td className="py-1.5 pr-3 text-right tabular-nums">{pct.format(m.m3.cobertura)}</td>
-      <td className="py-1.5 pr-3 text-right tabular-nums">{pct.format(m.m1.errorMediano)}</td>
-      <td className="py-1.5 pr-3 text-right tabular-nums">{pct.format(m.m3.errorMediano)}</td>
-      <td className="py-1.5 pr-3 text-right tabular-nums">{dir(m.m1.aciertoDireccional)}</td>
-      <td className="py-1.5 pr-3 text-right tabular-nums">{dir(m.m3.aciertoDireccional)}</td>
-      <td className="py-1.5 pr-0 text-right tabular-nums">{m.m1.n}</td>
-    </>
+    <div className="hidden md:block">
+      <table className="w-full border-collapse text-[13px]">
+        <caption className="sr-only">Evaluación walk-forward del modelo frente al baseline por ticker</caption>
+        <thead>
+          <tr className="text-left">
+            <th scope="col" rowSpan={2} className={`${claseTh} align-bottom`}>
+              Ticker
+            </th>
+            <th scope="col" rowSpan={2} className={`${claseTh} align-bottom`}>
+              Veredicto
+            </th>
+            <th scope="colgroup" colSpan={2} className={`${claseTh} ${grupo} pb-0 text-[var(--fg-2)]`}>
+              Error mediano
+            </th>
+            <th scope="colgroup" colSpan={2} className={`${claseTh} ${grupo} pb-0 text-[var(--fg-2)]`}>
+              Cobertura p10–p90
+            </th>
+            <th scope="colgroup" colSpan={2} className={`${claseTh} ${grupo} pb-0 text-[var(--fg-2)]`}>
+              Acierto direccional
+            </th>
+            <th scope="col" rowSpan={2} className={`${claseTh} pr-0 text-right align-bottom`}>
+              n
+            </th>
+          </tr>
+          <tr className="border-b border-[var(--border-2)]">
+            <th scope="col" className={`${claseTh} ${grupo} text-right font-medium`}>
+              1 m
+            </th>
+            <th scope="col" className={`${claseTh} text-right font-medium`}>
+              3 m
+            </th>
+            <th scope="col" className={`${claseTh} ${grupo} text-right font-medium`}>
+              1 m
+            </th>
+            <th scope="col" className={`${claseTh} text-right font-medium`}>
+              3 m
+            </th>
+            <th scope="col" className={`${claseTh} ${grupo} text-right font-medium`}>
+              1 m
+            </th>
+            <th scope="col" className={`${claseTh} text-right font-medium`}>
+              3 m
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {evaluaciones.map((e) => (
+            <tr key={e.ticker} className="border-b border-[var(--border-1)] hover:bg-[var(--bg-sunken)]">
+              <th scope="row" translate="no" className="py-2 pr-3 text-left font-mono font-medium text-[var(--fg-1)]">
+                {e.ticker}
+              </th>
+              <td className="py-2 pr-3">
+                <Veredicto gana={e.gana} />
+              </td>
+              <td className={`py-2 pr-3 text-right ${grupo}`}>
+                <Par modelo={pct.format(e.modelo.m1.errorMediano)} baseline={pct.format(e.baseline.m1.errorMediano)} />
+              </td>
+              <td className="py-2 pr-3 text-right">
+                <Par modelo={pct.format(e.modelo.m3.errorMediano)} baseline={pct.format(e.baseline.m3.errorMediano)} />
+              </td>
+              <td className={`py-2 pr-3 text-right ${grupo}`}>
+                <Par modelo={pct.format(e.modelo.m1.cobertura)} baseline={pct.format(e.baseline.m1.cobertura)} />
+              </td>
+              <td className="py-2 pr-3 text-right">
+                <Par modelo={pct.format(e.modelo.m3.cobertura)} baseline={pct.format(e.baseline.m3.cobertura)} />
+              </td>
+              <td className={`py-2 pr-3 text-right font-mono text-[var(--fg-2)] ${grupo}`}>
+                {dir(e.modelo.m1.aciertoDireccional)}
+              </td>
+              <td className="py-2 pr-3 text-right font-mono text-[var(--fg-2)]">{dir(e.modelo.m3.aciertoDireccional)}</td>
+              <td className="py-2 pr-0 text-right font-mono text-[var(--fg-3)]">{e.modelo.m1.n}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 
@@ -111,83 +220,37 @@ export function TablaEvaluacion({
   return (
     <Panel titulo="Evaluación walk-forward">
       {evaluaciones.length === 0 ? (
-        <p className="text-sm text-[var(--fg-2)]">Ningún ticker tiene orígenes suficientes para evaluar todavía</p>
+        <p className="text-sm text-[var(--fg-2)]">
+          Ningún ticker tiene orígenes suficientes para evaluar todavía. La evaluación aparece cuando la serie
+          acumula al menos 4 orígenes mensuales.
+        </p>
       ) : (
         <>
-          <div className="flex flex-col md:hidden">
-            {evaluaciones.map((e, i) => (
-              <TarjetaEvaluacion key={e.ticker} e={e} abierto={i === 0} />
-            ))}
-          </div>
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[680px] border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-[var(--border-1)] text-left text-[11px] font-semibold uppercase tracking-[var(--ls-wide)] text-[var(--fg-3)]">
-                  <th className="py-2 pr-3 font-semibold" scope="col">
-                    Ticker
-                  </th>
-                  <th className="py-2 pr-3 font-semibold" scope="col">
-                    Motor
-                  </th>
-                  <th className="py-2 pr-3 text-right font-semibold" scope="col">
-                    Cobert. 1 m
-                  </th>
-                  <th className="py-2 pr-3 text-right font-semibold" scope="col">
-                    Cobert. 3 m
-                  </th>
-                  <th className="py-2 pr-3 text-right font-semibold" scope="col">
-                    Error 1 m
-                  </th>
-                  <th className="py-2 pr-3 text-right font-semibold" scope="col">
-                    Error 3 m
-                  </th>
-                  <th className="py-2 pr-3 text-right font-semibold" scope="col">
-                    Direc. 1 m
-                  </th>
-                  <th className="py-2 pr-3 text-right font-semibold" scope="col">
-                    Direc. 3 m
-                  </th>
-                  <th className="py-2 pr-0 text-right font-semibold" scope="col">
-                    n
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="text-[var(--fg-2)]">
-                {evaluaciones.map((e) => [
-                  <tr key={`${e.ticker}-modelo`}>
-                    <td rowSpan={2} className="py-1.5 pr-3 align-top">
-                      <span translate="no" className="font-mono font-semibold text-[var(--fg-1)]">
-                        {e.ticker}
-                      </span>{' '}
-                      <Veredicto gana={e.gana} />
-                    </td>
-                    <td className="py-1.5 pr-3 font-semibold text-[var(--fg-1)]">Modelo</td>
-                    <Celdas m={e.modelo} />
-                  </tr>,
-                  <tr key={`${e.ticker}-baseline`} className="border-b border-[var(--border-1)]">
-                    <td className="py-1.5 pr-3 text-[var(--fg-3)]">Baseline</td>
-                    <Celdas m={e.baseline} />
-                  </tr>,
-                ])}
-              </tbody>
-            </table>
-          </div>
+          <p className="mb-4 max-w-[68ch] text-[13px] text-[var(--fg-2)]">
+            En cada celda, el primer valor es el <span className="font-semibold text-[var(--fg-1)]">modelo</span> y
+            el segundo, más tenue, el <span className="text-[var(--fg-3)]">baseline</span>. El modelo gana un ticker
+            cuando su error mediano es menor a 1 y a 3 meses.
+          </p>
+          <TablaMovil evaluaciones={evaluaciones} />
+          <TablaEscritorio evaluaciones={evaluaciones} />
         </>
       )}
-      <p className="mt-[14px] text-xs text-[var(--fg-3)]">
-        Cobertura ideal ≈ 80% (la banda p10–p90 debería contener el precio real 8 de cada 10 veces). Error =
-        mediana de |real − p50| / precio de origen. El baseline no opina dirección (su p50 es el precio de
-        origen); los empates del modelo se excluyen del denominador.
-      </p>
-      <p className="mt-2 text-xs text-[var(--fg-3)]">{ADVERTENCIA_SUPERPOSICION}</p>
-      {insuficientes.length > 0 && (
-        <p className="mt-2 text-xs text-[var(--fg-3)]">
-          Evaluación insuficiente (menos de 4 orígenes):{' '}
-          <span translate="no" className="font-mono">
-            {insuficientes.join(', ')}
-          </span>
+      <div className="mt-4 flex max-w-[78ch] flex-col gap-2 text-xs leading-relaxed text-[var(--fg-3)]">
+        <p>
+          Cobertura ideal ≈ 80% (la banda p10–p90 debería contener el precio real 8 de cada 10 veces). Error =
+          mediana de |real − p50| / precio de origen. El baseline no opina dirección (su p50 es el precio de
+          origen); los empates del modelo se excluyen del denominador.
         </p>
-      )}
+        <p>{ADVERTENCIA_SUPERPOSICION}</p>
+        {insuficientes.length > 0 && (
+          <p>
+            Evaluación insuficiente (menos de 4 orígenes):{' '}
+            <span translate="no" className="font-mono">
+              {insuficientes.join(', ')}
+            </span>
+          </p>
+        )}
+      </div>
     </Panel>
   )
 }

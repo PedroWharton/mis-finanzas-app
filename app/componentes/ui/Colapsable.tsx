@@ -1,5 +1,5 @@
 // Patrón único de details/summary de la app. Máximo 2 niveles anidados:
-// nivel 1 = bloque (summary fuerte), nivel 2 = detalle (summary suave).
+// nivel 1 = bloque (tarjeta, summary fuerte), nivel 2 = detalle (summary suave).
 export function Colapsable({
   resumen,
   meta,
@@ -17,15 +17,19 @@ export function Colapsable({
 }) {
   const estiloResumen =
     nivel === 1
-      ? 'text-[14px] font-semibold text-[var(--fg-1)]'
-      : 'text-[12px] font-semibold text-[var(--fg-2)]'
+      ? 'text-[15px] font-semibold text-[var(--fg-1)]'
+      : 'text-[13px] font-semibold text-[var(--fg-2)]'
   return (
     <details
       open={abierto || undefined}
-      className={`group ${nivel === 1 ? 'rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--bg-surface)]' : ''} ${className}`}
+      className={`group ${
+        nivel === 1
+          ? 'rounded-[var(--radius-lg)] border border-[var(--border-1)] bg-[var(--bg-surface)] shadow-[var(--shadow-xs)]'
+          : ''
+      } ${className}`}
     >
       <summary
-        className={`flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 ${
+        className={`flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-[var(--radius-lg)] ${
           nivel === 1 ? 'px-4 py-3 sm:px-5' : 'py-2'
         } select-none focus-visible:outline-none focus-visible:[box-shadow:var(--ring-focus)] [&::-webkit-details-marker]:hidden`}
       >
@@ -37,7 +41,7 @@ export function Colapsable({
           <svg
             aria-hidden="true"
             viewBox="0 0 16 16"
-            className="h-3.5 w-3.5 text-[var(--fg-3)] transition-transform duration-[var(--dur-base)] group-open:rotate-180"
+            className="h-3.5 w-3.5 text-[var(--fg-3)] transition-transform duration-[var(--dur-base)] ease-[var(--ease-out)] group-open:rotate-180"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.75"

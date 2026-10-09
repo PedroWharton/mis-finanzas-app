@@ -10,8 +10,8 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-[var(--radius-pill)] border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[var(--ls-wide)] ${className}`}
-      style={{ color, borderColor: 'color-mix(in srgb, currentcolor 35%, transparent)' }}
+      className={`inline-flex items-center gap-1 rounded-[var(--radius-pill)] border px-2.5 py-[3px] text-[11px] leading-none font-semibold uppercase tracking-[var(--ls-wide)] ${className}`}
+      style={{ color, borderColor: 'color-mix(in srgb, currentcolor 40%, transparent)' }}
     >
       {children}
     </span>

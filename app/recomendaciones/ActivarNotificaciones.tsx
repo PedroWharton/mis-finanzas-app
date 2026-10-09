@@ -14,7 +14,7 @@ function base64AUint8(base64: string): Uint8Array<ArrayBuffer> {
   return bytes
 }
 
-type Estado = 'no-soportado' | 'listo' | 'suscripto' | 'error' | 'cargando'
+type Estado = 'detectando' | 'no-soportado' | 'bloqueado' | 'listo' | 'suscripto' | 'error' | 'cargando'
 
 // Registra la suscripción en el server. `agregarSuscripcion` deduplica por
 // endpoint, así que llamarlo de nuevo con una sub ya conocida es idempotente.
@@ -28,7 +28,7 @@ async function registrar(sub: PushSubscription): Promise<boolean> {
 }
 
 export function ActivarNotificaciones() {
-  const [estado, setEstado] = useState<Estado>('cargando')
+  const [estado, setEstado] = useState<Estado>('detectando')
 
   useEffect(() => {
     // Toda la detección va dentro de la cadena de promesas: setState sincrónico
@@ -37,6 +37,8 @@ export function ActivarNotificaciones() {
     Promise.resolve()
       .then((): Estado | Promise<Estado> => {
         if (!soportado) return 'no-soportado'
+        // Permiso denegado: subscribe() fallaría siempre; se explica cómo destrabarlo.
+        if ('Notification' in window && Notification.permission === 'denied') return 'bloqueado'
         return navigator.serviceWorker
           .register('/sw.js')
           .then((reg) => reg.pushManager.getSubscription())
@@ -70,39 +72,62 @@ export function ActivarNotificaciones() {
       })
       setEstado((await registrar(sub)) ? 'suscripto' : 'error')
     } catch {
-      setEstado('error')
+      setEstado('Notification' in window && Notification.permission === 'denied' ? 'bloqueado' : 'error')
     }
   }
 
+  if (estado === 'detectando') {
+    // Mismo tamaño que el botón: sin salto de layout cuando termina la detección.
+    return <div aria-hidden="true" className="h-11 w-52 motion-safe:animate-pulse rounded-[var(--radius-pill)] bg-[var(--bg-sunken)]" />
+  }
   if (estado === 'no-soportado') {
     return (
-      <p className="text-sm text-[var(--fg-2)]">
-        En iPhone: compartir → “Agregar a pantalla de inicio” desde Safari, y abrir la app desde ahí para activar
-        notificaciones.
+      <p className="text-[14px] text-[var(--fg-1)]">
+        Este navegador no admite notificaciones web.
+      </p>
+    )
+  }
+  if (estado === 'bloqueado') {
+    return (
+      <p className="max-w-[60ch] text-[14px] text-[var(--fg-1)]">
+        Las notificaciones están bloqueadas para este sitio. Habilitalas desde los permisos del navegador (o de
+        Ajustes, si usás la app instalada) y volvé a esta página.
       </p>
     )
   }
   if (estado === 'suscripto') {
     return (
-      <p className="text-sm" style={{ color: 'var(--good)' }}>
-        Notificaciones activadas ✓
+      <p className="flex items-center gap-2 text-[14px] font-semibold text-[var(--fg-1)]">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 16 16"
+          className="h-4 w-4 shrink-0"
+          fill="none"
+          stroke="var(--good)"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="m3.5 8.5 3 3 6-7" />
+        </svg>
+        Notificaciones activadas en este dispositivo
       </p>
     )
   }
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-col items-start gap-3">
       <button
         type="button"
         onClick={suscribir}
         disabled={estado === 'cargando'}
+        aria-busy={estado === 'cargando' || undefined}
         className={claseBotonPrimario}
       >
-        {estado === 'cargando' ? 'Activando…' : estado === 'error' ? 'Reintentar notificaciones' : 'Activar notificaciones'}
+        {estado === 'cargando' ? 'Activando…' : estado === 'error' ? 'Reintentar' : 'Activar notificaciones'}
       </button>
       {estado === 'error' && (
-        <p role="alert" className="text-xs" style={{ color: 'var(--bad)' }}>
-          No se pudo activar. En iPhone hace falta instalar la app (compartir → “Agregar a pantalla de inicio”) y
-          abrirla desde el ícono.
+        <p role="alert" className="max-w-[60ch] text-[13px] leading-snug" style={{ color: 'var(--bad)' }}>
+          No se pudo activar. Si estás en iPhone, seguí los pasos de abajo; si no, revisá tu conexión y probá de nuevo.
         </p>
       )}
     </div>

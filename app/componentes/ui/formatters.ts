@@ -10,6 +10,8 @@ export const pct = new Intl.NumberFormat('es-AR', {
   minimumFractionDigits: 1,
   maximumFractionDigits: 1,
 })
+// Ratios adimensionales (Sharpe, correlación): coma decimal, dos cifras.
+export const ratio = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 export const fechaLarga = new Intl.DateTimeFormat('es-AR', {
   day: 'numeric',
   month: 'long',

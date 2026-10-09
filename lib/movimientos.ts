@@ -57,6 +57,13 @@ export function validarMovimientos(payload: unknown): ResultadoValidacion {
     if (ticker && tipo !== 'deposito' && tipo !== 'retiro') op.ticker = ticker
     if (cantidad !== undefined) op.cantidad = cantidad
     if (typeof o.nota === 'string' && o.nota.trim() !== '') op.nota = o.nota.trim()
+    // anioRenta solo tiene sentido en renta (cupón cobrado en enero que
+    // devengó el año anterior); en otros tipos se descarta como el ticker de un depósito.
+    if (o.anioRenta !== undefined && o.anioRenta !== null && o.anioRenta !== '') {
+      const a = typeof o.anioRenta === 'string' ? Number(o.anioRenta) : o.anioRenta
+      if (typeof a !== 'number' || !Number.isInteger(a) || a < 2000 || a > 2100) return falla('anioRenta', 'año entero YYYY')
+      if (tipo === 'dividendo' || tipo === 'interes' || tipo === 'rendimiento') op.anioRenta = a
+    }
     out.push(op)
   }
   return { ok: true, operaciones: out }
